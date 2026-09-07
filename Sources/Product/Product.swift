@@ -6,9 +6,9 @@
 @frozen
 public struct Product<each Element> {
 
-    // Swift 6.4 does not permit `~Copyable` or `~Escapable` suppression on an
-    // `each` parameter. The element capabilities are therefore a compiler
-    // concession of this variadic representation rather than an algebraic law.
+
+
+
     public var values: (repeat each Element)
 
     @inlinable
