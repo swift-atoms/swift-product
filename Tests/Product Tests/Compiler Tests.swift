@@ -2,7 +2,7 @@ import Foundation
 import Testing
 
 @Suite
-private struct `Compiler Tests` {
+private struct `Variadic parameter capabilities remain constrained by the compiler` {
     @Test
     func `variadic parameters cannot suppress element capabilities`() throws {
         let diagnostic = try typecheckFailure(

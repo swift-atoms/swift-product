@@ -8,27 +8,27 @@ private func requireCopyable<Value: Copyable>(_: Value) {}
 private func requireEscapable<Value: Escapable>(_: Value) {}
 
 @Suite
-struct `Product Tests` {
-    @Suite struct Unit {}
-    @Suite struct `Edge Case` {}
-    @Suite struct Integration {}
-    @Suite(.serialized) struct Performance {}
+struct `Products preserve component arity through operations and checked conformances` {
+    @Suite struct `Product operations preserve positional values arity and capabilities` {}
+    @Suite struct `No product boundary cases are defined` {}
+    @Suite struct `No product integration cases are defined` {}
+    @Suite(.serialized) struct `No product performance cases are defined` {}
 }
 
-extension `Product Tests`.Unit {
-    @Suite struct Construction {}
-    @Suite struct Conformances {}
-    @Suite struct Map {}
-    @Suite struct Append {}
-    @Suite struct Zip {}
-    @Suite struct Fold {}
-    @Suite struct Swap {}
-    @Suite struct Codable {}
-    @Suite struct Institute {}
-    @Suite struct Bitwise {}
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities` {
+    @Suite struct `Product construction preserves components projections and arity` {}
+    @Suite struct `Product conformances compare hash and describe their components` {}
+    @Suite struct `Product mapping transforms components while preserving arity and errors` {}
+    @Suite struct `Product append and prepend extend the expected side` {}
+    @Suite struct `Product zipping pairs corresponding component positions` {}
+    @Suite struct `Product folding combines components and preserves typed failures` {}
+    @Suite struct `Binary product swapping is an involution` {}
+    @Suite struct `Product coding is available when every component supports coding` {}
+    @Suite struct `Products inherit equation hash and comparison capabilities from components` {}
+    @Suite struct `Bitwise products preserve tuple layout and inline storage` {}
 }
 
-extension `Product Tests`.Unit.Construction {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product construction preserves components projections and arity` {
 
     @Test
     func `nullary product has one empty coordinate family`() {
@@ -81,7 +81,7 @@ extension `Product Tests`.Unit.Construction {
     }
 }
 
-extension `Product Tests`.Unit.Conformances {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product conformances compare hash and describe their components` {
 
     @Test
     func `equatable compares all components`() {
@@ -125,7 +125,7 @@ extension `Product Tests`.Unit.Conformances {
     }
 
     @Test
-    func `error conformance available when components are errors`() {
+    func `Products conform to Error when their components are errors`() {
         struct Failure: Swift.Error, Equatable {}
         struct Conflict: Swift.Error, Equatable {}
         let aggregated = Product(Failure(), Conflict())
@@ -134,7 +134,7 @@ extension `Product Tests`.Unit.Conformances {
     }
 }
 
-extension `Product Tests`.Unit.Map {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product mapping transforms components while preserving arity and errors` {
 
     @Test
     func `map transforms every component preserving arity`() {
@@ -196,7 +196,7 @@ extension `Product Tests`.Unit.Map {
     }
 }
 
-extension `Product Tests`.Unit.Append {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product append and prepend extend the expected side` {
 
     @Test
     func `append extends the pack on the right`() {
@@ -225,7 +225,7 @@ extension `Product Tests`.Unit.Append {
     }
 }
 
-extension `Product Tests`.Unit.Zip {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product zipping pairs corresponding component positions` {
 
     @Test
     func `zip pairs corresponding components`() {
@@ -252,7 +252,7 @@ extension `Product Tests`.Unit.Zip {
     }
 }
 
-extension `Product Tests`.Unit.Fold {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product folding combines components and preserves typed failures` {
 
     @Test
     func `fold collapses components via closure`() {
@@ -283,7 +283,7 @@ extension `Product Tests`.Unit.Fold {
     }
 }
 
-extension `Product Tests`.Unit.Swap {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Binary product swapping is an involution` {
 
     @Test
     func `swapped reverses a binary product`() {
@@ -302,7 +302,7 @@ extension `Product Tests`.Unit.Swap {
     }
 }
 
-extension `Product Tests`.Unit.Codable {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product coding is available when every component supports coding` {
 
     @Test
     func `Product is Codable when each element is Codable`() {
@@ -313,10 +313,10 @@ extension `Product Tests`.Unit.Codable {
     }
 }
 
-extension `Product Tests`.Unit.Institute {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Products inherit equation hash and comparison capabilities from components` {
 
     @Test
-    func `conforms to Equation_Protocol when each element does`() {
+    func `Products support Equation when every component does`() {
         func eq<T: Equation::Equation.`Protocol`>(_ a: borrowing T, _ b: borrowing T) -> Bool {
             a == b
         }
@@ -328,7 +328,7 @@ extension `Product Tests`.Unit.Institute {
     }
 
     @Test
-    func `conforms to Hash_Protocol when each element does`() {
+    func `Products support Hash when every component does`() {
         func hashed<T: Hash::Hash.`Protocol`>(_ x: borrowing T) -> Int {
             var hasher = Hasher()
             x.hash(into: &hasher)
@@ -340,7 +340,7 @@ extension `Product Tests`.Unit.Institute {
     }
 
     @Test
-    func `conforms to Comparison_Protocol when each element does`() {
+    func `Products support Comparison when every component does`() {
         func less<T: Comparison::Comparison.`Protocol`>(
             _ a: borrowing T,
             _ b: borrowing T
@@ -352,7 +352,7 @@ extension `Product Tests`.Unit.Institute {
     }
 }
 
-extension `Product Tests`.Unit.Bitwise {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Bitwise products preserve tuple layout and inline storage` {
 
     @Test
     func `Product is BitwiseCopyable when each element is BitwiseCopyable`() {
