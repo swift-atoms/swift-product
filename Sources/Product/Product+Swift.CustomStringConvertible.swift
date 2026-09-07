@@ -1,5 +1,5 @@
-extension Product: CustomStringConvertible
-where repeat each Element: CustomStringConvertible {
+extension Product: Swift.CustomStringConvertible
+where repeat each Element: Swift.CustomStringConvertible {
 
     @inlinable
     public var description: String {

@@ -13,8 +13,8 @@ let package = Package(
     ],
     products: [
         .library(name: "Product", targets: ["Product"]),
-        .library(name: "Product Standard Library Integration", targets: ["Product Standard Library Integration"]),
-        .library(name: "Product Foundation Library Integration", targets: ["Product Foundation Library Integration"]),
+
+        .library(name: "Product Foundation Integration", targets: ["Product Foundation Integration"]),
         .library(name: "Product Test Support", targets: ["Product Test Support"]),
     ],
     dependencies: [
@@ -41,20 +41,13 @@ let package = Package(
             ],
             path: "Sources/Product"
         ),
+        
         .target(
-            name: "Product Standard Library Integration",
+            name: "Product Foundation Integration",
             dependencies: [
                 .target(name: "Product"),
             ],
-            path: "Sources/Product Standard Library Integration"
-        ),
-        .target(
-            name: "Product Foundation Library Integration",
-            dependencies: [
-                .target(name: "Product"),
-                .target(name: "Product Standard Library Integration"),
-            ],
-            path: "Sources/Product Foundation Library Integration"
+            path: "Sources/Product Foundation Integration"
         ),
         .target(
             name: "Product Test Support",
@@ -67,12 +60,11 @@ let package = Package(
             name: "Product Tests",
             dependencies: [
                 .target(name: "Product"),
-                .product(name: "Comparison Standard Library Integration", package: "swift-comparison"),
-                .product(name: "Equation Standard Library Integration", package: "swift-equation"),
-                .product(name: "Hash Standard Library Integration", package: "swift-hash"),
+                .product(name: "Comparison", package: "swift-comparison"),
+                .product(name: "Equation", package: "swift-equation"),
+                .product(name: "Hash", package: "swift-hash"),
                 .target(name: "Product Test Support"),
-                .target(name: "Product Standard Library Integration"),
-                .target(name: "Product Foundation Library Integration"),
+                .target(name: "Product Foundation Integration"),
             ],
             path: "Tests/Product Tests",
             resources: [.copy("Fixtures")]

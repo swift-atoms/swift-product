@@ -1,6 +1,5 @@
 #if !hasFeature(Embedded)
-
-    extension Product: Encodable where repeat each Element: Encodable {
+extension Product: Swift.Encodable where repeat each Element: Swift.Encodable {
 
         @inlinable
         public func encode(to encoder: any Encoder) throws(any Swift.Error) {
@@ -10,5 +9,4 @@
             }
         }
     }
-
 #endif

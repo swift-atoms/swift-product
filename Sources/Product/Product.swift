@@ -33,4 +33,4 @@ extension Product {
     }
 }
 
-extension Product: Sendable where repeat each Element: Sendable {}
+extension Product: Swift.Sendable where repeat each Element: Swift.Sendable {}

@@ -1,6 +1,6 @@
-import Equation_Standard_Library_Integration
-import Comparison_Standard_Library_Integration
-import Hash_Standard_Library_Integration
+import Equation
+import Comparison
+import Hash
 import Product
 import Testing
 
