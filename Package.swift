@@ -12,10 +12,10 @@ let package = Package(
         .visionOS(.v27),
     ],
     products: [
-        .library(
-            name: "Product",
-            targets: ["Product"]
-        )
+        .library(name: "Product", targets: ["Product"]),
+        .library(name: "Product Standard Library Integration", targets: ["Product Standard Library Integration"]),
+        .library(name: "Product Foundation Library Integration", targets: ["Product Foundation Library Integration"]),
+        .library(name: "Product Test Support", targets: ["Product Test Support"]),
     ],
     dependencies: [
         .package(
@@ -35,36 +35,54 @@ let package = Package(
         .target(
             name: "Product",
             dependencies: [
-                .product(name: "Comparison Protocol", package: "swift-comparison"),
-                .product(name: "Equation Protocol", package: "swift-equation"),
-                .product(name: "Hash Protocol", package: "swift-hash"),
-            ]
+                .product(name: "Comparison", package: "swift-comparison"),
+                .product(name: "Equation", package: "swift-equation"),
+                .product(name: "Hash", package: "swift-hash"),
+            ],
+            path: "Sources/Product"
+        ),
+        .target(
+            name: "Product Standard Library Integration",
+            dependencies: [
+                .target(name: "Product"),
+            ],
+            path: "Sources/Product Standard Library Integration"
+        ),
+        .target(
+            name: "Product Foundation Library Integration",
+            dependencies: [
+                .target(name: "Product"),
+                .target(name: "Product Standard Library Integration"),
+            ],
+            path: "Sources/Product Foundation Library Integration"
+        ),
+        .target(
+            name: "Product Test Support",
+            dependencies: [
+                .target(name: "Product"),
+            ],
+            path: "Tests/Support"
         ),
         .testTarget(
             name: "Product Tests",
             dependencies: [
                 .target(name: "Product"),
-                .product(
-                    name: "Comparison Standard Library Integration",
-                    package: "swift-comparison"
-                ),
-                .product(
-                    name: "Equation Standard Library Integration",
-                    package: "swift-equation"
-                ),
-                .product(
-                    name: "Hash Standard Library Integration",
-                    package: "swift-hash"
-                ),
+                .product(name: "Comparison Standard Library Integration", package: "swift-comparison"),
+                .product(name: "Equation Standard Library Integration", package: "swift-equation"),
+                .product(name: "Hash Standard Library Integration", package: "swift-hash"),
+                .target(name: "Product Test Support"),
+                .target(name: "Product Standard Library Integration"),
+                .target(name: "Product Foundation Library Integration"),
             ],
+            path: "Tests/Product Tests",
             resources: [.copy("Fixtures")]
         ),
     ],
     swiftLanguageModes: [.v6]
 )
 
-for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
-    let ecosystem: [SwiftSetting] = [
+for target in package.targets {
+    target.swiftSettings = [
         .strictMemorySafety(),
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),
@@ -74,8 +92,4 @@ for target in package.targets where ![.system, .binary, .plugin, .macro].contain
         .enableExperimentalFeature("MoveOnlyTuples"),
         .enableUpcomingFeature("InferIsolatedConformances"),
     ]
-
-    let package: [SwiftSetting] = []
-
-    target.swiftSettings = (target.swiftSettings ?? []) + ecosystem + package
 }
