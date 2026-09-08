@@ -18,6 +18,7 @@ let package = Package(
         .library(name: "Product Test Support", targets: ["Product Test Support"]),
     ],
     dependencies: [
+
         .package(
             url: "https://github.com/swift-atoms/swift-comparison.git",
             branch: "main"
@@ -68,6 +69,33 @@ let package = Package(
             ],
             path: "Tests/Product Tests",
             resources: [.copy("Fixtures")]
+        ),
+        .testTarget(
+            name: "Consolidated Product Comparison Tests",
+            dependencies: [
+
+                .target(name: "Product"),
+                .product(name: "Comparison", package: "swift-comparison"),
+            ],
+            path: "Tests/Consolidated swift-product-comparison"
+        ),
+        .testTarget(
+            name: "Consolidated Product Equation Tests",
+            dependencies: [
+
+                .target(name: "Product"),
+                .product(name: "Equation", package: "swift-equation"),
+            ],
+            path: "Tests/Consolidated swift-product-equation"
+        ),
+        .testTarget(
+            name: "Consolidated Product Hash Tests",
+            dependencies: [
+
+                .target(name: "Product"),
+                .product(name: "Hash", package: "swift-hash"),
+            ],
+            path: "Tests/Consolidated swift-product-hash"
         ),
     ],
     swiftLanguageModes: [.v6]
