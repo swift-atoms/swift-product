@@ -1,4 +1,3 @@
-# .github/metadata.yaml
 description: "The Product n-ary cartesian product type using parameter packs in Swift."
 topics:
   - primitives
