@@ -20,19 +20,25 @@ extension Product {
                 ? ""
                 : "<\(genericParameters.joined(separator: ", "))>"
 
+            let overloaded = Set(
+                Dictionary(grouping: functions, by: \.name.text).filter { $0.value.count > 1 }.keys
+            )
+            func label(_ function: Analysis.Function) -> String {
+                overloaded.contains(function.name.text) ? function.mangled : function.name.text
+            }
             let storedFunctions = functions.map { function in
-                "    private let _\(function.name.trimmedDescription): \(function.closureType.trimmedDescription)"
+                "    private let _\(function.mangled): \(function.closureType.trimmedDescription)"
             }
             let storedProperties = properties.map { property in
                 "    \(access)let \(property.name.text): \(property.type.trimmedDescription)"
             }
             let parameters = functions.map { function in
-                "\(function.name.trimmedDescription): @escaping \(function.closureType.trimmedDescription)"
+                "\(label(function)): @escaping \(function.closureType.trimmedDescription)"
             } + properties.map { property in
                 "\(property.name.text): \(property.type.trimmedDescription)"
             }
             let assignments = functions.map { function in
-                "        self._\(function.name.trimmedDescription) = \(function.name.trimmedDescription)"
+                "        self._\(function.mangled) = \(label(function))"
             } + properties.map { property in
                 "        self.\(property.name.text) = \(property.name.text)"
             }

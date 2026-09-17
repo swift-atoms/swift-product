@@ -44,6 +44,8 @@ extension Product {
         public struct Function {
             public let declaration: FunctionDeclSyntax
             public let name: TokenSyntax
+            public let fullName: String
+            public let mangled: String
             public let parameters: [Parameter]
             public let closureType: TypeSyntax
             public let output: TypeSyntax
@@ -104,6 +106,7 @@ extension Product {
                     let coordinate = Self.function(function)
                     Self.validate(
                         function,
+                        fullName: coordinate.fullName,
                         parameters: coordinate.parameters,
                         isRethrowing: coordinate.isRethrowing,
                         names: &names,
@@ -176,6 +179,7 @@ extension Product {
 
         private static func validate(
             _ function: FunctionDeclSyntax,
+            fullName: String,
             parameters: [Analysis.Parameter],
             isRethrowing: Bool,
             names: inout Set<String>,
@@ -186,8 +190,8 @@ extension Product {
                 reasons.append("`\(name)` is an operator requirement")
                 return
             }
-            if !names.insert(name).inserted {
-                reasons.append("`\(name)` duplicates another product coordinate")
+            if !names.insert(fullName).inserted {
+                reasons.append("`\(fullName)` duplicates another product coordinate")
             }
             if !function.attributes.isEmpty {
                 reasons.append("`\(name)` has attributes whose effects cannot be represented by the product field")
@@ -321,10 +325,17 @@ extension Product {
                     )
                 )
             )
+            let labels = declaration.signature.parameterClause.parameters.map { parameter in
+                parameter.firstName.tokenKind == .wildcard
+                    ? (parameter.secondName ?? parameter.firstName).text
+                    : parameter.firstName.text
+            }
+            let fullName = "\(declaration.name.text)(\(labels.map { "\($0):" }.joined()))"
+            let mangled = ([declaration.name.text] + labels).joined(separator: "_")
             let member = MemberAccessExprSyntax(
                 base: DeclReferenceExprSyntax(baseName: .keyword(.self)),
                 declName: DeclReferenceExprSyntax(
-                    baseName: .identifier("_\(declaration.name.text)")
+                    baseName: .identifier("_\(mangled)")
                 )
             )
             let callee = TupleExprSyntax(
@@ -369,6 +380,8 @@ extension Product {
             return Analysis.Function(
                 declaration: declaration,
                 name: declaration.name,
+                fullName: fullName,
+                mangled: mangled,
                 parameters: parameters,
                 closureType: closure,
                 output: output,
