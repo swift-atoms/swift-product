@@ -1,5 +1,6 @@
 // swift-tools-version: 6.4
 
+import CompilerPluginSupport
 import PackageDescription
 
 let package = Package(
@@ -16,30 +17,16 @@ let package = Package(
 
         .library(name: "Product Foundation Integration", targets: ["Product Foundation Integration"]),
         .library(name: "Product Test Support", targets: ["Product Test Support"]),
+        .library(name: "Product Macro", targets: ["Product Macro"]),
+        .library(name: "Product Macro Core", targets: ["Product Macro Core"]),
     ],
     dependencies: [
-
-        .package(
-            url: "https://github.com/swift-atoms/swift-comparison.git",
-            branch: "main"
-        ),
-        .package(
-            url: "https://github.com/swift-atoms/swift-equation.git",
-            branch: "main"
-        ),
-        .package(
-            url: "https://github.com/swift-atoms/swift-hash.git",
-            branch: "main"
-        ),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", "603.0.2"..<"604.0.0"),
     ],
     targets: [
         .target(
             name: "Product",
-            dependencies: [
-                .product(name: "Comparison", package: "swift-comparison"),
-                .product(name: "Equation", package: "swift-equation"),
-                .product(name: "Hash", package: "swift-hash"),
-            ],
+            dependencies: [],
             path: "Sources/Product"
         ),
         
@@ -61,47 +48,49 @@ let package = Package(
             name: "Product Tests",
             dependencies: [
                 .target(name: "Product"),
-                .product(name: "Comparison", package: "swift-comparison"),
-                .product(name: "Equation", package: "swift-equation"),
-                .product(name: "Hash", package: "swift-hash"),
                 .target(name: "Product Test Support"),
                 .target(name: "Product Foundation Integration"),
             ],
             path: "Tests/Product Tests",
             resources: [.copy("Fixtures")]
         ),
-        .testTarget(
-            name: "Consolidated Product Comparison Tests",
+        .target(
+            name: "Product Macro Core",
             dependencies: [
-
-                .target(name: "Product"),
-                .product(name: "Comparison", package: "swift-comparison"),
-            ],
-            path: "Tests/Consolidated swift-product-comparison"
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+            ]
+        ),
+        .macro(
+            name: "Product Macro Plugin",
+            dependencies: [
+                "Product Macro Core",
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+            ]
+        ),
+        .target(
+            name: "Product Macro",
+            dependencies: ["Product Macro Plugin"]
         ),
         .testTarget(
-            name: "Consolidated Product Equation Tests",
+            name: "Product Macro Tests",
             dependencies: [
-
-                .target(name: "Product"),
-                .product(name: "Equation", package: "swift-equation"),
-            ],
-            path: "Tests/Consolidated swift-product-equation"
-        ),
-        .testTarget(
-            name: "Consolidated Product Hash Tests",
-            dependencies: [
-
-                .target(name: "Product"),
-                .product(name: "Hash", package: "swift-hash"),
-            ],
-            path: "Tests/Consolidated swift-product-hash"
+                "Product Macro",
+                "Product Macro Core",
+                "Product Macro Plugin",
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax"),
+            ]
         ),
     ],
     swiftLanguageModes: [.v6]
 )
 
-for target in package.targets {
+for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
     target.swiftSettings = [
         .strictMemorySafety(),
         .enableUpcomingFeature("ExistentialAny"),

@@ -1,6 +1,3 @@
-import Equation
-import Comparison
-import Hash
 import Product
 import Testing
 
@@ -24,7 +21,7 @@ extension `Products preserve component arity through operations and checked conf
     @Suite struct `Product folding combines components and preserves typed failures` {}
     @Suite struct `Binary product swapping is an involution` {}
     @Suite struct `Product coding is available when every component supports coding` {}
-    @Suite struct `Products inherit equation hash and comparison capabilities from components` {}
+    @Suite struct `Products inherit equatable hashable and comparable capabilities from components` {}
     @Suite struct `Bitwise products preserve tuple layout and inline storage` {}
 }
 
@@ -313,11 +310,11 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Products inherit equation hash and comparison capabilities from components` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Products inherit equatable hashable and comparable capabilities from components` {
 
     @Test
-    func `Products support Equation when every component does`() {
-        func eq<T: Equation::Equation.`Protocol`>(_ a: borrowing T, _ b: borrowing T) -> Bool {
+    func `Products support Equatable when every component does`() {
+        func eq<T: Swift.Equatable>(_ a: borrowing T, _ b: borrowing T) -> Bool {
             a == b
         }
         let a = Product(1, "x")
@@ -328,8 +325,8 @@ extension `Products preserve component arity through operations and checked conf
     }
 
     @Test
-    func `Products support Hash when every component does`() {
-        func hashed<T: Hash::Hash.`Protocol`>(_ x: borrowing T) -> Int {
+    func `Products support Hashable when every component does`() {
+        func hashed<T: Swift.Hashable>(_ x: borrowing T) -> Int {
             var hasher = Hasher()
             x.hash(into: &hasher)
             return hasher.finalize()
@@ -340,8 +337,8 @@ extension `Products preserve component arity through operations and checked conf
     }
 
     @Test
-    func `Products support Comparison when every component does`() {
-        func less<T: Comparison::Comparison.`Protocol`>(
+    func `Products support Comparable when every component does`() {
+        func less<T: Swift.Comparable>(
             _ a: borrowing T,
             _ b: borrowing T
         ) -> Bool { a < b }
