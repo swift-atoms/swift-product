@@ -1,3 +1,4 @@
+public import Operation_Macro_Core
 public import SwiftSyntax
 import SwiftSyntaxBuilder
 

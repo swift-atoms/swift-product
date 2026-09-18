@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "Product Macro Core", targets: ["Product Macro Core"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/swift-atoms/swift-operation.git", branch: "main"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", "603.0.2"..<"604.0.0"),
     ],
     targets: [
@@ -57,6 +58,7 @@ let package = Package(
         .target(
             name: "Product Macro Core",
             dependencies: [
+                .product(name: "Operation Macro Core", package: "swift-operation"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
             ]
@@ -77,6 +79,7 @@ let package = Package(
         .testTarget(
             name: "Product Macro Tests",
             dependencies: [
+                .product(name: "Operation Macro Core", package: "swift-operation"),
                 "Product Macro",
                 "Product Macro Core",
                 "Product Macro Plugin",

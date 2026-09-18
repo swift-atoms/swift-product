@@ -1,104 +1,17 @@
+public import Operation_Macro_Core
 public import SwiftSyntax
 
 extension Product {
+    // A protocol read as a product: its functions (each an Operation.Signature), its getters and its
+    // associated types, with the diagnostics of what a stored product cannot represent.
     public struct Analysis {
+        public typealias Function = Operation.Signature
+        public typealias Parameter = Operation.Signature.Parameter
+
         public enum Coordinate {
             case function(Function)
             case associatedType(AssociatedType)
             case property(Property)
-        }
-
-        public enum ParameterConvention {
-            case value
-            case borrowing
-            case consuming
-            case sending
-            case `inout`
-            case unsupported
-        }
-
-        public struct Parameter {
-            public let declaration: FunctionParameterSyntax
-            public let localName: TokenSyntax
-
-            public let valueType: TypeSyntax
-            public let closureType: TypeSyntax
-            public let convention: ParameterConvention
-            public let forwardingExpression: ExprSyntax
-            public let ownedExpression: ExprSyntax
-
-            public var transfersOwnership: Bool {
-                switch convention {
-                case .consuming, .sending:
-                    true
-                default:
-                    false
-                }
-            }
-
-            public var isInout: Bool {
-                if case .inout = convention { true } else { false }
-            }
-        }
-
-        public struct Function {
-            public let declaration: FunctionDeclSyntax
-            public let name: TokenSyntax
-            public let fullName: String
-            public let mangled: String
-            // The stored field an operation lives in: its base name, or `mangled` when the base name is overloaded.
-            public internal(set) var storage: String
-            public let parameters: [Parameter]
-            public let closureType: TypeSyntax
-            public let output: TypeSyntax
-            public let returnsVoid: Bool
-            public let thrownError: TypeSyntax?
-            public let isUntypedThrows: Bool
-            public let isRethrowing: Bool
-
-            public var invocation: ExprSyntax {
-                let member = MemberAccessExprSyntax(
-                    base: DeclReferenceExprSyntax(baseName: .keyword(.self)),
-                    declName: DeclReferenceExprSyntax(baseName: .identifier("_\(storage)"))
-                )
-                let callee = TupleExprSyntax(
-                    elements: LabeledExprListSyntax([LabeledExprSyntax(expression: member)])
-                )
-                let arguments = parameters.enumerated().map { offset, parameter in
-                    LabeledExprSyntax(
-                        expression: parameter.forwardingExpression,
-                        trailingComma: offset == parameters.count - 1
-                            ? nil
-                            : .commaToken(trailingTrivia: .space)
-                    )
-                }
-                var invocation = ExprSyntax(
-                    FunctionCallExprSyntax(
-                        calledExpression: callee,
-                        leftParen: .leftParenToken(),
-                        arguments: LabeledExprListSyntax(arguments),
-                        rightParen: .rightParenToken()
-                    )
-                )
-                let effects = declaration.signature.effectSpecifiers
-                if effects?.asyncSpecifier != nil {
-                    invocation = ExprSyntax(
-                        AwaitExprSyntax(
-                            awaitKeyword: .keyword(.await, trailingTrivia: .space),
-                            expression: invocation
-                        )
-                    )
-                }
-                if effects?.throwsClause != nil {
-                    invocation = ExprSyntax(
-                        TryExprSyntax(
-                            tryKeyword: .keyword(.try, trailingTrivia: .space),
-                            expression: invocation
-                        )
-                    )
-                }
-                return invocation
-            }
         }
 
         public struct AssociatedType {
@@ -148,7 +61,7 @@ extension Product {
 
             for member in declaration.memberBlock.members {
                 if let function = member.decl.as(FunctionDeclSyntax.self) {
-                    let coordinate = Self.function(function)
+                    let coordinate = Function(function)
                     Self.validate(
                         function,
                         fullName: coordinate.fullName,
@@ -322,118 +235,6 @@ extension Product {
             )
         }
 
-        private static func function(_ declaration: FunctionDeclSyntax) -> Analysis.Function {
-            let parameters = declaration.signature.parameterClause.parameters.map { parameter in
-                let value = parameterValue(of: parameter)
-                let localName = parameter.secondName ?? parameter.firstName
-                let reference = DeclReferenceExprSyntax(baseName: localName)
-                return Analysis.Parameter(
-                    declaration: parameter,
-                    localName: localName,
-                    valueType: value.type,
-                    closureType: parameter.type,
-                    convention: value.convention,
-                    forwardingExpression: value.convention.isInout
-                        ? ExprSyntax(InOutExprSyntax(expression: reference))
-                        : ExprSyntax(reference),
-                    ownedExpression: value.convention.isBorrowing
-                        ? ExprSyntax(
-                            CopyExprSyntax(
-                                copyKeyword: .keyword(
-                                    .copy,
-                                    trailingTrivia: .space
-                                ),
-                                expression: reference
-                            )
-                        )
-                        : ExprSyntax(reference)
-                )
-            }
-            let output = declaration.signature.returnClause?.type
-                ?? TypeSyntax(IdentifierTypeSyntax(name: .identifier("Void")))
-            let effectSpecifiers = declaration.signature.effectSpecifiers
-            let throwsClause = effectSpecifiers?.throwsClause
-            let closureParameters = parameters.enumerated().map { offset, parameter in
-                TupleTypeElementSyntax(
-                    type: parameter.closureType,
-                    trailingComma: offset == parameters.count - 1
-                        ? nil
-                        : .commaToken(trailingTrivia: .space)
-                )
-            }
-            let typeEffects = effectSpecifiers.flatMap { effects in
-                effects.asyncSpecifier == nil && effects.throwsClause == nil
-                    ? nil
-                    : TypeEffectSpecifiersSyntax(
-                        asyncSpecifier: effects.asyncSpecifier,
-                        throwsClause: effects.throwsClause
-                    )
-            }
-            let closure = TypeSyntax(
-                FunctionTypeSyntax(
-                    parameters: TupleTypeElementListSyntax(closureParameters),
-                    rightParen: .rightParenToken(trailingTrivia: .space),
-                    effectSpecifiers: typeEffects,
-                    returnClause: ReturnClauseSyntax(
-                        arrow: .arrowToken(trailingTrivia: .space),
-                        type: output
-                    )
-                )
-            )
-            let labels = declaration.signature.parameterClause.parameters.map { parameter in
-                parameter.firstName.tokenKind == .wildcard
-                    ? (parameter.secondName ?? parameter.firstName).text
-                    : parameter.firstName.text
-            }
-            let fullName = "\(declaration.name.text)(\(labels.map { "\($0):" }.joined()))"
-            let mangled = ([declaration.name.text] + labels).joined(separator: "_")
-            let outputSpelling = output.trimmedDescription
-
-            return Analysis.Function(
-                declaration: declaration,
-                name: declaration.name,
-                fullName: fullName,
-                mangled: mangled,
-                storage: mangled,
-                parameters: parameters,
-                closureType: closure,
-                output: output,
-                returnsVoid: outputSpelling == "Void" || outputSpelling == "()",
-                thrownError: throwsClause?.type,
-                isUntypedThrows: throwsClause != nil && throwsClause?.type == nil,
-                isRethrowing: throwsClause?.throwsSpecifier.tokenKind == .keyword(.rethrows)
-            )
-        }
-
-        private static func parameterValue(
-            of parameter: FunctionParameterSyntax
-        ) -> (type: TypeSyntax, convention: Analysis.ParameterConvention) {
-            guard var attributed = parameter.type.as(AttributedTypeSyntax.self) else {
-                return (parameter.type, .value)
-            }
-            var convention = Analysis.ParameterConvention.value
-            for specifier in attributed.specifiers {
-                guard let simple = specifier.as(SimpleTypeSpecifierSyntax.self) else {
-                    convention = .unsupported
-                    break
-                }
-                switch simple.specifier.tokenKind {
-                case .keyword(.borrowing), .identifier("__shared"):
-                    convention = .borrowing
-                case .keyword(.consuming), .identifier("__owned"):
-                    convention = .consuming
-                case .keyword(.sending):
-                    convention = .sending
-                case .keyword(.inout):
-                    convention = .inout
-                default:
-                    convention = .unsupported
-                }
-            }
-            attributed.specifiers = []
-            return (TypeSyntax(attributed), convention)
-        }
-
         private static func isGetterOnly(_ binding: PatternBindingSyntax) -> Bool {
             guard let accessors = binding.accessorBlock?.accessors else { return false }
             switch accessors {
@@ -445,15 +246,5 @@ extension Product {
                 return false
             }
         }
-    }
-}
-
-private extension Product.Analysis.ParameterConvention {
-    var isBorrowing: Bool {
-        if case .borrowing = self { true } else { false }
-    }
-
-    var isInout: Bool {
-        if case .inout = self { true } else { false }
     }
 }
