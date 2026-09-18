@@ -47,30 +47,30 @@ extension `Product Derivation Tests` {
         func `protocol expands to its operation product`() {
             expectProductExpansion(
                 """
-                @Product
-                protocol Greeting {
-                    func greet(name: String) -> String
+                enum Greeting {
+                    @Product
+                    protocol `Protocol` {
+                        func greet(name: String) -> String
+                    }
                 }
                 """,
                 expandedSource: """
-                protocol Greeting {
-                    func greet(name: String) -> String
-                }
-
-                struct __Greeting: Greeting {
-                    private let _greet: (String) -> String
-
-                    init(greet: @escaping (String) -> String) {
-                        self._greet = greet
+                enum Greeting {
+                    protocol `Protocol` {
+                        func greet(name: String) -> String
                     }
 
-                    func greet(name: String) -> String {
-                        return (self._greet)(name)
-                    }
-                }
+                    struct Product: `Protocol` {
+                        private let _greet: (String) -> String
 
-                extension Greeting {
-                    typealias Product = __Greeting
+                        init(greet: @escaping (String) -> String) {
+                            self._greet = greet
+                        }
+
+                        func greet(name: String) -> String {
+                            return (self._greet)(name)
+                        }
+                    }
                 }
                 """
             )
@@ -80,34 +80,34 @@ extension `Product Derivation Tests` {
         func `parameter ownership is preserved by the operation field`() {
             expectProductExpansion(
                 """
-                @Product
-                protocol Transform {
-                    associatedtype Input: ~Copyable
-                    associatedtype Output: ~Copyable
-                    func transform(_ input: borrowing Input, into output: consuming Output)
+                enum Transform {
+                    @Product
+                    protocol `Protocol` {
+                        associatedtype Input: ~Copyable
+                        associatedtype Output: ~Copyable
+                        func transform(_ input: borrowing Input, into output: consuming Output)
+                    }
                 }
                 """,
                 expandedSource: """
-                protocol Transform {
-                    associatedtype Input: ~Copyable
-                    associatedtype Output: ~Copyable
-                    func transform(_ input: borrowing Input, into output: consuming Output)
-                }
-
-                struct __Transform<Input: ~Copyable, Output: ~Copyable>: Transform {
-                    private let _transform: (borrowing Input, consuming Output) -> Void
-
-                    init(transform: @escaping (borrowing Input, consuming Output) -> Void) {
-                        self._transform = transform
+                enum Transform {
+                    protocol `Protocol` {
+                        associatedtype Input: ~Copyable
+                        associatedtype Output: ~Copyable
+                        func transform(_ input: borrowing Input, into output: consuming Output)
                     }
 
-                    func transform(_ input: borrowing Input, into output: consuming Output) {
-                        (self._transform)(input, output)
-                    }
-                }
+                    struct Product<Input: ~Copyable, Output: ~Copyable>: `Protocol` {
+                        private let _transform: (borrowing Input, consuming Output) -> Void
 
-                extension Transform {
-                    typealias Product = __Transform
+                        init(transform: @escaping (borrowing Input, consuming Output) -> Void) {
+                            self._transform = transform
+                        }
+
+                        func transform(_ input: borrowing Input, into output: consuming Output) {
+                            (self._transform)(input, output)
+                        }
+                    }
                 }
                 """
             )
@@ -117,32 +117,32 @@ extension `Product Derivation Tests` {
         func `inout parameters are forwarded with an inout argument`() {
             expectProductExpansion(
                 """
-                @Product
-                protocol Mutation {
-                    associatedtype Value
-                    func mutate(_ value: inout Value)
+                enum Mutation {
+                    @Product
+                    protocol `Protocol` {
+                        associatedtype Value
+                        func mutate(_ value: inout Value)
+                    }
                 }
                 """,
                 expandedSource: """
-                protocol Mutation {
-                    associatedtype Value
-                    func mutate(_ value: inout Value)
-                }
-
-                struct __Mutation<Value>: Mutation {
-                    private let _mutate: (inout Value) -> Void
-
-                    init(mutate: @escaping (inout Value) -> Void) {
-                        self._mutate = mutate
+                enum Mutation {
+                    protocol `Protocol` {
+                        associatedtype Value
+                        func mutate(_ value: inout Value)
                     }
 
-                    func mutate(_ value: inout Value) {
-                        (self._mutate)(&value)
-                    }
-                }
+                    struct Product<Value>: `Protocol` {
+                        private let _mutate: (inout Value) -> Void
 
-                extension Mutation {
-                    typealias Product = __Mutation
+                        init(mutate: @escaping (inout Value) -> Void) {
+                            self._mutate = mutate
+                        }
+
+                        func mutate(_ value: inout Value) {
+                            (self._mutate)(&value)
+                        }
+                    }
                 }
                 """
             )
@@ -152,23 +152,27 @@ extension `Product Derivation Tests` {
         func `unsupported requirements are diagnosed instead of discarded`() {
             expectProductExpansion(
                 """
-                @Product
-                protocol Greeting {
-                    var salutation: String { get }
-                    func greet<Value>(name: Value) -> String
+                enum Greeting {
+                    @Product
+                    protocol `Protocol` {
+                        var salutation: String { get }
+                        func greet<Value>(name: Value) -> String
+                    }
                 }
                 """,
                 expandedSource: """
-                protocol Greeting {
-                    var salutation: String { get }
-                    func greet<Value>(name: Value) -> String
+                enum Greeting {
+                    protocol `Protocol` {
+                        var salutation: String { get }
+                        func greet<Value>(name: Value) -> String
+                    }
                 }
                 """,
                 diagnostics: [
                     DiagnosticSpec(
                         message: "@Product cannot represent every requirement: `greet` is generic; stored operation fields cannot be generic.",
-                        line: 1,
-                        column: 1
+                        line: 2,
+                        column: 5
                     )
                 ]
             )
@@ -178,21 +182,25 @@ extension `Product Derivation Tests` {
         func `mutable property requirements are rejected`() {
             expectProductExpansion(
                 """
-                @Product
-                protocol Counter {
-                    var value: Int { get set }
+                enum Counter {
+                    @Product
+                    protocol `Protocol` {
+                        var value: Int { get set }
+                    }
                 }
                 """,
                 expandedSource: """
-                protocol Counter {
-                    var value: Int { get set }
+                enum Counter {
+                    protocol `Protocol` {
+                        var value: Int { get set }
+                    }
                 }
                 """,
                 diagnostics: [
                     DiagnosticSpec(
                         message: "@Product cannot represent every requirement: `var value: Int { get set }` is not a getter-only property requirement.",
-                        line: 1,
-                        column: 1
+                        line: 2,
+                        column: 5
                     )
                 ]
             )
@@ -202,17 +210,21 @@ extension `Product Derivation Tests` {
         func `non protocol attachment is diagnosed`() {
             expectProductExpansion(
                 """
-                @Product
-                struct Greeting {}
+                enum Greeting {
+                    @Product
+                    struct Model {}
+                }
                 """,
                 expandedSource: """
-                struct Greeting {}
+                enum Greeting {
+                    struct Model {}
+                }
                 """,
                 diagnostics: [
                     DiagnosticSpec(
                         message: "@Product applies to a protocol declaration only.",
-                        line: 1,
-                        column: 1
+                        line: 2,
+                        column: 5
                     )
                 ]
             )

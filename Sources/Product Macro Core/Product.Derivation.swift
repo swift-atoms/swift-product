@@ -7,9 +7,7 @@ extension Product {
             let protocolDeclaration = analysis.declaration
             let access = analysis.access.map { "\($0.name.text) " } ?? ""
             let semantic = protocolDeclaration.name.trimmedDescription
-            let name = declaredName(of: protocolDeclaration)
-            let nested = name == "Protocol"
-            let product = nested ? "Product" : "__\(name)"
+            let product = "Product"
             let functions = analysis.functionCoordinates
             let properties = analysis.propertyCoordinates
             let genericParameters = analysis.associatedTypeCoordinates.map { coordinate in
@@ -20,25 +18,19 @@ extension Product {
                 ? ""
                 : "<\(genericParameters.joined(separator: ", "))>"
 
-            let overloaded = Set(
-                Dictionary(grouping: functions, by: \.name.text).filter { $0.value.count > 1 }.keys
-            )
-            func label(_ function: Analysis.Function) -> String {
-                overloaded.contains(function.name.text) ? function.mangled : function.name.text
-            }
             let storedFunctions = functions.map { function in
-                "    private let _\(function.mangled): \(function.closureType.trimmedDescription)"
+                "    private let _\(function.storage): \(function.closureType.trimmedDescription)"
             }
             let storedProperties = properties.map { property in
                 "    \(access)let \(property.name.text): \(property.type.trimmedDescription)"
             }
             let parameters = functions.map { function in
-                "\(label(function)): @escaping \(function.closureType.trimmedDescription)"
+                "\(function.storage): @escaping \(function.closureType.trimmedDescription)"
             } + properties.map { property in
                 "\(property.name.text): \(property.type.trimmedDescription)"
             }
             let assignments = functions.map { function in
-                "        self._\(function.mangled) = \(label(function))"
+                "        self._\(function.storage) = \(function.storage)"
             } + properties.map { property in
                 "        self.\(property.name.text) = \(property.name.text)"
             }
@@ -65,29 +57,6 @@ extension Product {
                 \(members)
                 }
                 """)]
-        }
-
-        public static func extensions(
-            of analysis: Analysis,
-            type: some TypeSyntaxProtocol
-        ) -> [ExtensionDeclSyntax] {
-            let protocolDeclaration = analysis.declaration
-            let name = declaredName(of: protocolDeclaration)
-            guard name != "Protocol" else { return [] }
-            let access = analysis.access.map { "\($0.name.text) " } ?? ""
-            let product = "__\(name)"
-            let declaration: DeclSyntax = """
-                extension \(type.trimmed) {
-                    \(raw: access)typealias Product = \(raw: product)
-                }
-                """
-            return declaration.as(ExtensionDeclSyntax.self).map { [$0] } ?? []
-        }
-
-        private static func declaredName(of declaration: ProtocolDeclSyntax) -> String {
-            let spelling = declaration.name.text
-            guard spelling.first == "`", spelling.last == "`" else { return spelling }
-            return String(spelling.dropFirst().dropLast())
         }
     }
 }

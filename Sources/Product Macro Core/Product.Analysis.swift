@@ -46,14 +46,59 @@ extension Product {
             public let name: TokenSyntax
             public let fullName: String
             public let mangled: String
+            // The stored field an operation lives in: its base name, or `mangled` when the base name is overloaded.
+            public internal(set) var storage: String
             public let parameters: [Parameter]
             public let closureType: TypeSyntax
             public let output: TypeSyntax
-            public let invocation: ExprSyntax
             public let returnsVoid: Bool
             public let thrownError: TypeSyntax?
             public let isUntypedThrows: Bool
             public let isRethrowing: Bool
+
+            public var invocation: ExprSyntax {
+                let member = MemberAccessExprSyntax(
+                    base: DeclReferenceExprSyntax(baseName: .keyword(.self)),
+                    declName: DeclReferenceExprSyntax(baseName: .identifier("_\(storage)"))
+                )
+                let callee = TupleExprSyntax(
+                    elements: LabeledExprListSyntax([LabeledExprSyntax(expression: member)])
+                )
+                let arguments = parameters.enumerated().map { offset, parameter in
+                    LabeledExprSyntax(
+                        expression: parameter.forwardingExpression,
+                        trailingComma: offset == parameters.count - 1
+                            ? nil
+                            : .commaToken(trailingTrivia: .space)
+                    )
+                }
+                var invocation = ExprSyntax(
+                    FunctionCallExprSyntax(
+                        calledExpression: callee,
+                        leftParen: .leftParenToken(),
+                        arguments: LabeledExprListSyntax(arguments),
+                        rightParen: .rightParenToken()
+                    )
+                )
+                let effects = declaration.signature.effectSpecifiers
+                if effects?.asyncSpecifier != nil {
+                    invocation = ExprSyntax(
+                        AwaitExprSyntax(
+                            awaitKeyword: .keyword(.await, trailingTrivia: .space),
+                            expression: invocation
+                        )
+                    )
+                }
+                if effects?.throwsClause != nil {
+                    invocation = ExprSyntax(
+                        TryExprSyntax(
+                            tryKeyword: .keyword(.try, trailingTrivia: .space),
+                            expression: invocation
+                        )
+                    )
+                }
+                return invocation
+            }
         }
 
         public struct AssociatedType {
@@ -137,7 +182,17 @@ extension Product {
                 }
             }
 
-            self.coordinates = coordinates
+            let overloaded = Set(
+                Dictionary(grouping: coordinates.compactMap { coordinate -> String? in
+                    guard case let .function(function) = coordinate else { return nil }
+                    return function.name.text
+                }, by: { $0 }).filter { $0.value.count > 1 }.keys
+            )
+            self.coordinates = coordinates.map { coordinate in
+                guard case var .function(function) = coordinate else { return coordinate }
+                function.storage = overloaded.contains(function.name.text) ? function.mangled : function.name.text
+                return .function(function)
+            }
             self.diagnostics = diagnostics
         }
 
@@ -332,49 +387,6 @@ extension Product {
             }
             let fullName = "\(declaration.name.text)(\(labels.map { "\($0):" }.joined()))"
             let mangled = ([declaration.name.text] + labels).joined(separator: "_")
-            let member = MemberAccessExprSyntax(
-                base: DeclReferenceExprSyntax(baseName: .keyword(.self)),
-                declName: DeclReferenceExprSyntax(
-                    baseName: .identifier("_\(mangled)")
-                )
-            )
-            let callee = TupleExprSyntax(
-                elements: LabeledExprListSyntax([
-                    LabeledExprSyntax(expression: member)
-                ])
-            )
-            let arguments = parameters.enumerated().map { offset, parameter in
-                LabeledExprSyntax(
-                    expression: parameter.forwardingExpression,
-                    trailingComma: offset == parameters.count - 1
-                        ? nil
-                        : .commaToken(trailingTrivia: .space)
-                )
-            }
-            var invocation = ExprSyntax(
-                FunctionCallExprSyntax(
-                    calledExpression: callee,
-                    leftParen: .leftParenToken(),
-                    arguments: LabeledExprListSyntax(arguments),
-                    rightParen: .rightParenToken()
-                )
-            )
-            if effectSpecifiers?.asyncSpecifier != nil {
-                invocation = ExprSyntax(
-                    AwaitExprSyntax(
-                        awaitKeyword: .keyword(.await, trailingTrivia: .space),
-                        expression: invocation
-                    )
-                )
-            }
-            if throwsClause != nil {
-                invocation = ExprSyntax(
-                    TryExprSyntax(
-                        tryKeyword: .keyword(.try, trailingTrivia: .space),
-                        expression: invocation
-                    )
-                )
-            }
             let outputSpelling = output.trimmedDescription
 
             return Analysis.Function(
@@ -382,10 +394,10 @@ extension Product {
                 name: declaration.name,
                 fullName: fullName,
                 mangled: mangled,
+                storage: mangled,
                 parameters: parameters,
                 closureType: closure,
                 output: output,
-                invocation: invocation,
                 returnsVoid: outputSpelling == "Void" || outputSpelling == "()",
                 thrownError: throwsClause?.type,
                 isUntypedThrows: throwsClause != nil && throwsClause?.type == nil,

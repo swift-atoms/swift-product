@@ -1,9 +1,11 @@
 import Product_Macro
 import Testing
 
-@Product
-private protocol Greeting {
-    func greet(name: String) async throws -> String
+private enum Greeting {
+    @Product
+    protocol `Protocol` {
+        func greet(name: String) async throws -> String
+    }
 }
 
 private enum Counter {
@@ -33,25 +35,29 @@ private struct LinearOutput: ~Copyable {
     let value: Int
 }
 
-@Product
-private protocol LinearTransform {
-    associatedtype Input: ~Copyable
-    associatedtype Output: ~Copyable
+private enum LinearTransform {
+    @Product
+    protocol `Protocol` {
+        associatedtype Input: ~Copyable
+        associatedtype Output: ~Copyable
 
-    func transform(
-        _ input: borrowing Input,
-        into output: consuming Output
-    ) -> Int
+        func transform(
+            _ input: borrowing Input,
+            into output: consuming Output
+        ) -> Int
+    }
 }
 
-@Product
-private protocol Mutation {
-    associatedtype Value
+private enum Mutation {
+    @Product
+    protocol `Protocol` {
+        associatedtype Value
 
-    func mutate(_ value: inout Value)
+        func mutate(_ value: inout Value)
+    }
 }
 
-private func use<Client: Greeting>(_ client: Client) async throws -> String {
+private func use<Client: Greeting.`Protocol`>(_ client: Client) async throws -> String {
     try await client.greet(name: "Blob")
 }
 

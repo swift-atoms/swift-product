@@ -25,7 +25,7 @@ struct `Product Derivation Tests` {
 
         #expect(declarations.count == 1)
         #expect(analysis.diagnostics.isEmpty)
-        #expect(product.name.text == "__Greeting")
+        #expect(product.name.text == "Product")
         #expect(product.memberBlock.members.count == 5)
     }
 
@@ -39,7 +39,7 @@ struct `Product Derivation Tests` {
         let declarations = Product.Derivation.peers(of: analysis)
         let product = try #require(declarations.first?.as(StructDeclSyntax.self))
 
-        #expect(product.name.text == "__Empty")
+        #expect(product.name.text == "Product")
         #expect(analysis.diagnostics.isEmpty)
         #expect(product.memberBlock.members.count == 1)
     }
