@@ -13,24 +13,41 @@ let package = Package(
         .visionOS(.v27),
     ],
     products: [
+        .library(name: "Structural Macro", targets: ["Structural Macro"]),
+        .library(name: "Product Syntax", targets: ["Product Syntax"]),
         .library(name: "Product", targets: ["Product"]),
 
         .library(name: "Product Foundation Integration", targets: ["Product Foundation Integration"]),
         .library(name: "Product Test Support", targets: ["Product Test Support"]),
         .library(name: "Product Macro", targets: ["Product Macro"]),
-        .library(name: "Product Macro Core", targets: ["Product Macro Core"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/swift-atoms/swift-algebra.git", branch: "main"),
         .package(url: "https://github.com/swift-atoms/swift-operation.git", branch: "main"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", "603.0.2"..<"604.0.0"),
     ],
     targets: [
+        .macro(name: "Structural Macro Plugin", dependencies: [
+            "Structural Macro Core",
+            .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+        ]),
+        .target(name: "Structural Macro", dependencies: ["Structural Macro Plugin"]),
+        .target(name: "Structural Macro Core", dependencies: [
+                .product(name: "Type Algebra Syntax", package: "swift-algebra"),
+            .product(name: "SwiftSyntax", package: "swift-syntax"),
+            .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+        ]),
+        .target(name: "Product Syntax", dependencies: [
+            .product(name: "Operation Syntax", package: "swift-operation"),
+            .product(name: "SwiftSyntax", package: "swift-syntax"),
+        ]),
         .target(
             name: "Product",
             dependencies: [],
             path: "Sources/Product"
         ),
-        
+
         .target(
             name: "Product Foundation Integration",
             dependencies: [
@@ -58,7 +75,8 @@ let package = Package(
         .target(
             name: "Product Macro Core",
             dependencies: [
-                .product(name: "Operation Macro Core", package: "swift-operation"),
+                "Product Syntax",
+                .product(name: "Operation Syntax", package: "swift-operation"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
             ]
@@ -74,12 +92,15 @@ let package = Package(
         ),
         .target(
             name: "Product Macro",
-            dependencies: ["Product Macro Plugin"]
+            dependencies: [
+                "Structural Macro",
+                "Product Macro Plugin",
+            ]
         ),
         .testTarget(
             name: "Product Macro Tests",
             dependencies: [
-                .product(name: "Operation Macro Core", package: "swift-operation"),
+                .product(name: "Operation Syntax", package: "swift-operation"),
                 "Product Macro",
                 "Product Macro Core",
                 "Product Macro Plugin",
@@ -104,4 +125,9 @@ for target in package.targets where ![.system, .binary, .plugin, .macro].contain
         .enableExperimentalFeature("MoveOnlyTuples"),
         .enableUpcomingFeature("InferIsolatedConformances"),
     ]
+}
+
+// Consumer compilation must reject visibility regressions, even when other packages suppress warnings.
+for target in package.targets where target.type == .test || target.name.hasSuffix("Consumer Fixtures") {
+    target.swiftSettings = (target.swiftSettings ?? []) + [.treatAllWarnings(as: .error)]
 }

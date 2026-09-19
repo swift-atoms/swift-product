@@ -1,4 +1,4 @@
-public import Operation_Macro_Core
+import Operation_Syntax
 public import SwiftSyntax
 import SwiftSyntaxBuilder
 

@@ -1,4 +1,5 @@
-import Operation_Macro_Core
+import Product_Syntax
+import Operation_Syntax
 import SwiftParser
 import SwiftSyntax
 import Testing

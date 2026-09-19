@@ -1,4 +1,4 @@
-public import Operation_Macro_Core
+public import Operation_Syntax
 public import SwiftSyntax
 
 extension Product {

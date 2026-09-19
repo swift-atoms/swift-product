@@ -1,7 +1,9 @@
 import Product_Macro
 import Testing
 
-@Structural
+@StructuralEquatable
+@StructuralHashable
+@StructuralSendable
 private struct Pair<First, Second> {
     let first: First
     let second: Second
@@ -12,17 +14,23 @@ private struct Pair<First, Second> {
     }
 }
 
-@Structural
+@StructuralEquatable
+@StructuralHashable
+@StructuralSendable
 private struct Unit {}
 
-@Structural
+@StructuralEquatable
+@StructuralHashable
+@StructuralSendable
 private enum Choice<Left, Right> {
     case left(Left)
     case right(Right)
     case neither
 }
 
-@Structural
+@StructuralEquatable
+@StructuralHashable
+@StructuralSendable
 @Copyable
 private enum Token<Payload: ~Copyable>: ~Copyable {
     case token(Payload)
@@ -68,4 +76,27 @@ private struct `Structural Tests` {
         requireHashable(Token<Int>.token(1))
         requireNoncopyable(Token<Linear>.token(Linear()))
     }
+}
+
+@StructuralEquatable
+@StructuralHashable
+private enum LabeledPayload {
+    case pair(left: Int, right: String)
+    case empty
+}
+@Test func structuralCapabilitiesHandleEveryAssociatedValue() {
+    #expect(LabeledPayload.pair(left: 1, right: "a") == .pair(left: 1, right: "a"))
+    #expect(LabeledPayload.pair(left: 1, right: "a") != .pair(left: 1, right: "b"))
+    #expect(Set([LabeledPayload.pair(left: 1, right: "a"), .pair(left: 1, right: "a")]).count == 1)
+}
+
+@StructuralEquatable @StructuralHashable @StructuralSendable
+private struct Phantom<Value: ~Copyable> { let tag: Int }
+@Test func phantomParametersDoNotImposeCapabilities() {
+    let value = Phantom<Linear>(tag: 1)
+    requireHashable(value)
+    requireSendable(value)
+    requireCopyable(value)
+    #expect(value == Phantom<Linear>(tag: 1))
+    #expect(value.hashValue == Phantom<Linear>(tag: 1).hashValue)
 }
