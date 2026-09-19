@@ -9,30 +9,31 @@ extension Structural {
     public enum Derivation {
         // Copyable under the same law, for a generic structure that suppressed it (@Copyable).
         public static func copyable(of analysis: Analysis) -> [ExtensionDeclSyntax] {
-            return [DeclSyntax(stringLiteral: "extension \(analysis.type): Copyable\(analysis.requirements(for: "Copyable")) {}")]
+            return [DeclSyntax(stringLiteral: "extension \(analysis.type): Swift::Copyable\(analysis.requirements(for: "Swift::Copyable")) {}")]
                 .compactMap { $0.as(ExtensionDeclSyntax.self) }
         }
 
         public static func extensions(of analysis: Analysis, capability: String) -> [ExtensionDeclSyntax] {
+            let capability = capability.hasPrefix("Swift.") ? "Swift::" + capability.dropFirst(6) : capability
             let isGeneric = !analysis.parameters.isEmpty
             func requirements(_ capability: String) -> String { analysis.requirements(for: capability) }
             var declarations: [String] = []
-            if capability == "Swift.Sendable" { declarations.append("extension \(analysis.type): Swift.Sendable\(requirements("Swift.Sendable")) {}") }
+            if capability == "Swift::Sendable" { declarations.append("extension \(analysis.type): Swift::Sendable\(requirements("Swift::Sendable")) {}") }
             // A noncopyable structure compares and hashes only where @Copyable can restore Copyable: when generic.
             if !analysis.suppressesCopyable || isGeneric {
-                if capability == "Swift.Equatable" {
+                if capability == "Swift::Equatable" {
                 declarations.append("""
-                    extension \(analysis.type): Swift.Equatable\(requirements("Swift.Equatable")) {
-                        \(analysis.access)static func == (lhs: Self, rhs: Self) -> Swift.Bool {
+                    extension \(analysis.type): Swift::Equatable\(requirements("Swift::Equatable")) {
+                        \(analysis.access)static func == (lhs: Self, rhs: Self) -> Swift::Bool {
                             \(equality(of: analysis))
                         }
                     }
                     """)
                 }
-                if capability == "Swift.Hashable" {
+                if capability == "Swift::Hashable" {
                 declarations.append("""
-                    extension \(analysis.type): Swift.Hashable\(requirements("Swift.Hashable")) {
-                        \(analysis.access)func hash(into hasher: inout Swift.Hasher) {
+                    extension \(analysis.type): Swift::Hashable\(requirements("Swift::Hashable")) {
+                        \(analysis.access)func hash(into hasher: inout Swift::Hasher) {
                             \(hashing(of: analysis))
                         }
                     }

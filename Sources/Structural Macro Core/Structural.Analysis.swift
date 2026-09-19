@@ -41,8 +41,8 @@ extension Structural {
             let unique = Array(Set(dependent)).sorted()
             var predicates = unique.map { "\($0): \(capability)" }
             for parameter in noncopyableParameters {
-                let restoringCopyable = unique.contains(parameter) && ["Copyable", "Swift.Equatable", "Swift.Hashable"].contains(capability)
-                if !restoringCopyable { predicates.append("\(parameter): ~Copyable") }
+                let restoringCopyable = unique.contains(parameter) && ["Copyable", "Swift::Copyable", "Swift::Equatable", "Swift::Hashable"].contains(capability)
+                if !restoringCopyable { predicates.append("\(parameter): ~Swift::Copyable") }
             }
             return predicates.isEmpty ? "" : " where " + predicates.joined(separator: ", ")
         }
