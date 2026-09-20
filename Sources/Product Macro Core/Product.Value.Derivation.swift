@@ -47,11 +47,6 @@ extension Product {
                     throw Type.Failure("A writable draft must select at least one field, all mutable.")
                 }
                 let visibility = access(structure)
-                let conformances = structure.inheritanceClause?.inheritedTypes.compactMap { inherited -> String? in
-                    let name = inherited.type.trimmedDescription.split(separator: ".").last.map(String.init) ?? ""
-                    return ["Hashable", "Equatable", "Sendable"].contains(name) ? inherited.type.trimmedDescription : nil
-                } ?? []
-                let inherits = conformances.isEmpty ? "" : ": " + conformances.joined(separator: ", ")
                 let properties = selected.map { field in
                     "\(visibility)var \(field.name): \(field.type.trimmedDescription)" + (field.defaultValue.map { " = \($0.trimmedDescription)" } ?? "")
                 }
@@ -68,7 +63,7 @@ extension Product {
                 }
                 return [DeclSyntax(stringLiteral: """
                     @Memberwise
-                    \(visibility)struct Draft\(inherits) {
+                    \(visibility)struct Draft {
                         \(properties.joined(separator: "\n"))
                     }
                     """), DeclSyntax(stringLiteral: """

@@ -32,3 +32,5 @@ private struct GenericRecord<Element>: Equatable, Sendable {
     #expect(record == ValueRecord(id: 1, second, created: 123))
     #expect(GenericRecord<Int>(id: 2, .init(title: "Generic")).draft.title == "Generic")
 }
+
+extension ValueRecord.Draft: Equatable, Sendable {}

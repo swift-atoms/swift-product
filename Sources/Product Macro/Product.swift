@@ -6,7 +6,7 @@
 // (`Greeting.Product`); at file scope the peer would be a file-scope `Product`. The nesting is not diagnosed:
 // a macro attached inside another macro's output sees no lexical context.
 @attached(peer, names: named(Product))
-public macro Product(sendable: Bool = false) = #externalMacro(
+public macro Product() = #externalMacro(
     module: "Product_Macro_Plugin",
     type: "Macro"
 )

@@ -17,6 +17,6 @@ public struct Macro: PeerMacro {
                 "@Product cannot represent every requirement: \(analysis.diagnostics.joined(separator: "; "))."
             )
         }
-        return Product.Derivation.peers(of: analysis, sendable: node.arguments?.as(LabeledExprListSyntax.self)?.first?.expression.trimmedDescription == "true")
+        return Product.Derivation.peers(of: analysis)
     }
 }

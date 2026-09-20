@@ -37,10 +37,10 @@ extension Product {
         public static func storageName(_ name: String) -> String { "`_" + name.filter { $0 != "`" } + "`" }
 
         /// Swift storage policy for the mathematical product; shared by its declaration and forwarding owners.
-        public func storage(sendable: Bool, privateFunctions: Bool = false, unlabelled: Set<String> = []) throws -> Type.Syntax.Record {
+        public func storage(privateFunctions: Bool = false, unlabelled: Set<String> = []) throws -> Type.Syntax.Record {
             try Type.Syntax.Record(algebra) { coordinate in
                 if let function = functionCoordinates.first(where: { $0.storage == coordinate.name }) {
-                    let type = (sendable ? "@Sendable " : "") + function.closureType.trimmedDescription
+                    let type = (Type.Syntax.Conformance.contains("Sendable", in: declaration) ? "@Sendable " : "") + function.closureType.trimmedDescription
                     return .init(privateFunctions ? Self.storageName(coordinate.name) : coordinate.name, type: type,
                         label: unlabelled.contains(coordinate.name) ? "_" : coordinate.name, binding: coordinate.name,
                         argument: "@escaping " + type, mutable: false, access: privateFunctions ? "private " : nil)

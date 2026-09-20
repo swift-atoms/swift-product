@@ -1,9 +1,6 @@
 import Product_Macro
 import Testing
 
-@StructuralEquatable
-@StructuralHashable
-@StructuralSendable
 private struct Pair<First, Second> {
     let first: First
     let second: Second
@@ -14,24 +11,14 @@ private struct Pair<First, Second> {
     }
 }
 
-@StructuralEquatable
-@StructuralHashable
-@StructuralSendable
 private struct Unit {}
 
-@StructuralEquatable
-@StructuralHashable
-@StructuralSendable
 private enum Choice<Left, Right> {
     case left(Left)
     case right(Right)
     case neither
 }
 
-@StructuralEquatable
-@StructuralHashable
-@StructuralSendable
-@Copyable
 private enum Token<Payload: ~Copyable>: ~Copyable {
     case token(Payload)
 }
@@ -78,8 +65,6 @@ private struct `Structural Tests` {
     }
 }
 
-@StructuralEquatable
-@StructuralHashable
 private enum LabeledPayload {
     case pair(left: Int, right: String)
     case empty
@@ -90,7 +75,6 @@ private enum LabeledPayload {
     #expect(Set([LabeledPayload.pair(left: 1, right: "a"), .pair(left: 1, right: "a")]).count == 1)
 }
 
-@StructuralEquatable @StructuralHashable @StructuralSendable
 private struct Phantom<Value: ~Copyable> { let tag: Int }
 @Test func phantomParametersDoNotImposeCapabilities() {
     let value = Phantom<Linear>(tag: 1)
@@ -100,3 +84,25 @@ private struct Phantom<Value: ~Copyable> { let tag: Int }
     #expect(value == Phantom<Linear>(tag: 1))
     #expect(value.hashValue == Phantom<Linear>(tag: 1).hashValue)
 }
+
+extension Pair: Equatable where First: Equatable, Second: Equatable {}
+extension Pair: Hashable where First: Hashable, Second: Hashable {}
+extension Pair: Sendable where First: Sendable, Second: Sendable {}
+extension Unit: Equatable, Hashable, Sendable {}
+extension Choice: Equatable where Left: Equatable, Right: Equatable {}
+extension Choice: Hashable where Left: Hashable, Right: Hashable {}
+extension Choice: Sendable where Left: Sendable, Right: Sendable {}
+extension Token: Copyable where Payload: Copyable {}
+extension Token: Sendable where Payload: Sendable & ~Copyable {}
+extension Token: Equatable where Payload: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        switch (lhs, rhs) { case let (.token(lhs), .token(rhs)): lhs == rhs }
+    }
+}
+extension Token: Hashable where Payload: Hashable {
+    func hash(into hasher: inout Hasher) {
+        switch self { case let .token(value): hasher.combine(value) }
+    }
+}
+extension LabeledPayload: Equatable, Hashable {}
+extension Phantom: Equatable, Hashable, Sendable where Value: ~Copyable {}
