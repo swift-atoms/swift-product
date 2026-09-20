@@ -1,3 +1,4 @@
+import Foundation
 import Operation_Syntax
 public import SwiftSyntax
 import SwiftSyntaxBuilder
@@ -20,8 +21,11 @@ extension Product {
                 ? ""
                 : "<\(genericParameters.joined(separator: ", "))>"
 
+            func privateStorage(_ storage: String) -> String {
+                "`_" + storage.replacingOccurrences(of: "`", with: "") + "`"
+            }
             let storedFunctions = functions.map { function in
-                "    private let _\(function.storage): \(sending)\(function.closureType.trimmedDescription)"
+                "    private let \(privateStorage(function.storage)): \(sending)\(function.closureType.trimmedDescription)"
             }
             let storedProperties = properties.map { property in
                 "    \(access)let \(property.name.text): \(property.type.trimmedDescription)"
@@ -32,14 +36,15 @@ extension Product {
                 "\(property.name.text): \(property.type.trimmedDescription)"
             }
             let assignments = functions.map { function in
-                "        self._\(function.storage) = \(function.storage)"
+                "        self.\(privateStorage(function.storage)) = \(function.storage)"
             } + properties.map { property in
                 "        self.\(property.name.text) = \(property.name.text)"
             }
             let forwarding = functions.map { function in
-                let statement = function.returnsVoid
-                    ? function.invocation.trimmedDescription
-                    : "return \(function.invocation.trimmedDescription)"
+                let invocation = function.invocation.trimmedDescription.replacingOccurrences(
+                    of: "self._\(function.storage)", with: "self.\(privateStorage(function.storage))"
+                )
+                let statement = function.returnsVoid ? invocation : "return \(invocation)"
                 return """
                         \(access)func \(function.name.trimmedDescription)\(function.declaration.signature.trimmedDescription) {
                             \(statement)
