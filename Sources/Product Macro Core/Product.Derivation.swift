@@ -4,13 +4,14 @@ import SwiftSyntaxBuilder
 
 extension Product {
     public enum Derivation {
-        public static func peers(of analysis: Analysis) -> [DeclSyntax] {
+        public static func peers(of analysis: Analysis, sendable: Bool = false) -> [DeclSyntax] {
             let protocolDeclaration = analysis.declaration
             let access = analysis.access.map { "\($0.name.text) " } ?? ""
             let semantic = protocolDeclaration.name.trimmedDescription
             let product = "Product"
             let functions = analysis.functionCoordinates
             let properties = analysis.propertyCoordinates
+            let sending = sendable ? "@Sendable " : ""
             let genericParameters = analysis.associatedTypeCoordinates.map { coordinate in
                 coordinate.constraint.map { "\(coordinate.name.text): \($0.trimmedDescription)" }
                     ?? coordinate.name.text
@@ -20,13 +21,13 @@ extension Product {
                 : "<\(genericParameters.joined(separator: ", "))>"
 
             let storedFunctions = functions.map { function in
-                "    private let _\(function.storage): \(function.closureType.trimmedDescription)"
+                "    private let _\(function.storage): \(sending)\(function.closureType.trimmedDescription)"
             }
             let storedProperties = properties.map { property in
                 "    \(access)let \(property.name.text): \(property.type.trimmedDescription)"
             }
             let parameters = functions.map { function in
-                "\(function.storage): @escaping \(function.closureType.trimmedDescription)"
+                "\(function.storage): @escaping \(sending)\(function.closureType.trimmedDescription)"
             } + properties.map { property in
                 "\(property.name.text): \(property.type.trimmedDescription)"
             }
@@ -54,7 +55,7 @@ extension Product {
             let members = (storedFunctions + storedProperties + [initializer] + forwarding)
                 .joined(separator: "\n\n")
             return [DeclSyntax(stringLiteral: """
-                \(access)struct \(product)\(genericClause): \(semantic) {
+                \(access)struct \(product)\(genericClause): \(semantic)\(sendable ? ", Swift.Sendable" : "") {
                 \(members)
                 }
                 """)]

@@ -4,7 +4,7 @@ import Product_Macro_Core
 
 public struct Macro: PeerMacro {
     public static func expansion(
-        of _: AttributeSyntax,
+        of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in _: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
@@ -17,6 +17,6 @@ public struct Macro: PeerMacro {
                 "@Product cannot represent every requirement: \(analysis.diagnostics.joined(separator: "; "))."
             )
         }
-        return Product.Derivation.peers(of: analysis)
+        return Product.Derivation.peers(of: analysis, sendable: node.arguments?.as(LabeledExprListSyntax.self)?.first?.expression.trimmedDescription == "true")
     }
 }

@@ -85,6 +85,7 @@ let package = Package(
             name: "Product Macro Plugin",
             dependencies: [
                 "Product Macro Core",
+                .product(name: "Type Algebra Syntax", package: "swift-algebra"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),

@@ -6,7 +6,15 @@
 // (`Greeting.Product`); at file scope the peer would be a file-scope `Product`. The nesting is not diagnosed:
 // a macro attached inside another macro's output sees no lexical context.
 @attached(peer, names: named(Product))
-public macro Product() = #externalMacro(
+public macro Product(sendable: Bool = false) = #externalMacro(
     module: "Product_Macro_Plugin",
     type: "Macro"
 )
+
+/// Construct a stored-value product, preserving declaration order and defaults.
+@attached(member, names: named(init))
+public macro Memberwise() = #externalMacro(module: "Product_Macro_Plugin", type: "Memberwise")
+
+/// Select the writable product complementary to the named identity/metadata fields.
+@attached(member, names: named(Draft), named(draft), named(init))
+public macro Draft(excluding fields: String...) = #externalMacro(module: "Product_Macro_Plugin", type: "Draft")
