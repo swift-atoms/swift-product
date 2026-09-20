@@ -56,7 +56,7 @@ extension Structural {
                 modifiers = structure.modifiers
                 generics = structure.genericParameterClause
                 isEnum = false
-                let properties = StoredProperties(structure)
+                let properties = Type.Syntax.Properties(structure)
                 guard properties.diagnostics.isEmpty else { return nil }
                 componentTypes = properties.fields.map(\.type)
                 fields = properties.fields.flatMap { Self.coordinates(name: $0.name, type: $0.type) }
@@ -67,7 +67,7 @@ extension Structural {
                 generics = enumeration.genericParameterClause
                 isEnum = true
                 fields = []
-                componentTypes = RecursiveShape.elements(of: enumeration).flatMap { RecursiveShape.parameters(of: $0).map(\.type) }
+                componentTypes = Type.Syntax.Recursion.elements(of: enumeration).flatMap { Type.Syntax.Recursion.parameters(of: $0).map(\.type) }
                 cases = enumeration.memberBlock.members.flatMap { member in
                     member.decl.as(EnumCaseDeclSyntax.self)?.elements.map {
                         Case(name: $0.name.text, arity: $0.parameterClause?.parameters.count ?? 0, payloads: $0.parameterClause?.parameters.map(\.type) ?? [])

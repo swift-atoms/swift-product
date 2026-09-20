@@ -61,14 +61,14 @@ extension `Product Derivation Tests` {
                     }
 
                     struct Product: `Protocol` {
-                        private let _greet: (String) -> String
+                        private let `_greet`: (String) -> String
 
                         init(greet: @escaping (String) -> String) {
-                            self._greet = greet
+                            self.`_greet` = greet
                         }
 
                         func greet(name: String) -> String {
-                            return (self._greet)(name)
+                            return (self.`_greet`)(name)
                         }
                     }
                 }
@@ -98,14 +98,14 @@ extension `Product Derivation Tests` {
                     }
 
                     struct Product<Input: ~Copyable, Output: ~Copyable>: `Protocol` {
-                        private let _transform: (borrowing Input, consuming Output) -> Void
+                        private let `_transform`: (borrowing Input, consuming Output) -> Void
 
                         init(transform: @escaping (borrowing Input, consuming Output) -> Void) {
-                            self._transform = transform
+                            self.`_transform` = transform
                         }
 
                         func transform(_ input: borrowing Input, into output: consuming Output) {
-                            (self._transform)(input, output)
+                            (self.`_transform`)(input, output)
                         }
                     }
                 }
@@ -133,14 +133,14 @@ extension `Product Derivation Tests` {
                     }
 
                     struct Product<Value>: `Protocol` {
-                        private let _mutate: (inout Value) -> Void
+                        private let `_mutate`: (inout Value) -> Void
 
                         init(mutate: @escaping (inout Value) -> Void) {
-                            self._mutate = mutate
+                            self.`_mutate` = mutate
                         }
 
                         func mutate(_ value: inout Value) {
-                            (self._mutate)(&value)
+                            (self.`_mutate`)(&value)
                         }
                     }
                 }

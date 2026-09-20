@@ -1,3 +1,4 @@
+public import Type_Algebra_Syntax
 public import Operation_Syntax
 public import SwiftSyntax
 
@@ -24,6 +25,31 @@ extension Product {
             public let declaration: VariableDeclSyntax
             public let name: TokenSyntax
             public let type: TypeSyntax
+        }
+
+        public var algebra: Type.Record {
+            get throws {
+                try Type.Record(functionCoordinates.map { .init($0.storage, $0.algebra.implementation) }
+                    + propertyCoordinates.map { .init($0.name.text, Type.Syntax.Expression($0.type, parameters: []).algebra) })
+            }
+        }
+
+        public static func storageName(_ name: String) -> String { "`_" + name.filter { $0 != "`" } + "`" }
+
+        /// Swift storage policy for the mathematical product; shared by its declaration and forwarding owners.
+        public func storage(sendable: Bool, privateFunctions: Bool = false, unlabelled: Set<String> = []) throws -> Type.Syntax.Record {
+            try Type.Syntax.Record(algebra) { coordinate in
+                if let function = functionCoordinates.first(where: { $0.storage == coordinate.name }) {
+                    let type = (sendable ? "@Sendable " : "") + function.closureType.trimmedDescription
+                    return .init(privateFunctions ? Self.storageName(coordinate.name) : coordinate.name, type: type,
+                        label: unlabelled.contains(coordinate.name) ? "_" : coordinate.name, binding: coordinate.name,
+                        argument: "@escaping " + type, mutable: false, access: privateFunctions ? "private " : nil)
+                }
+                guard let property = propertyCoordinates.first(where: { $0.name.text == coordinate.name }) else {
+                    throw Type.Failure("missing Swift representation for product coordinate")
+                }
+                return .init(coordinate.name, type: property.type.trimmedDescription, mutable: false)
+            }
         }
 
         public let declaration: ProtocolDeclSyntax

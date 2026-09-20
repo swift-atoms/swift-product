@@ -39,6 +39,7 @@ let package = Package(
             .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
         ]),
         .target(name: "Product Syntax", dependencies: [
+                .product(name: "Type Algebra Syntax", package: "swift-algebra"),
             .product(name: "Operation Syntax", package: "swift-operation"),
             .product(name: "SwiftSyntax", package: "swift-syntax"),
         ]),
@@ -75,6 +76,7 @@ let package = Package(
         .target(
             name: "Product Macro Core",
             dependencies: [
+                .product(name: "Type Algebra Syntax", package: "swift-algebra"),
                 "Product Syntax",
                 .product(name: "Operation Syntax", package: "swift-operation"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
