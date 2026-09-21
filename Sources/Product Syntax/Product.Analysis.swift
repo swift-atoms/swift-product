@@ -48,7 +48,7 @@ extension Product {
                 guard let property = propertyCoordinates.first(where: { $0.name.text == coordinate.name }) else {
                     throw Type.Failure("missing Swift representation for product coordinate")
                 }
-                return .init(coordinate.name, type: property.type.trimmedDescription, mutable: false)
+                return .init(coordinate.name, type: property.type.trimmedDescription, mutable: true)
             }
         }
 
