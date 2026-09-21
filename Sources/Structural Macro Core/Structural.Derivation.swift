@@ -45,9 +45,7 @@ extension Structural {
 
         private static func equality(of analysis: Analysis) -> String {
             guard analysis.isEnum else {
-                return analysis.fields.isEmpty
-                    ? "return true"
-                    : "return " + analysis.fields.map { "lhs.\($0.name) == rhs.\($0.name)" }.joined(separator: " && ")
+                return analysis.fields.map { "guard lhs.\($0.name) == rhs.\($0.name) else { return false }" }.joined(separator: "\n") + "\nreturn true"
             }
             guard !analysis.cases.isEmpty else { return "switch (lhs, rhs) {}" }
             let arms = analysis.cases.map { enumCase in
@@ -57,10 +55,10 @@ extension Structural {
                 let comparisons = enumCase.payloads.enumerated().flatMap { index, type in
                     Analysis.coordinates(name: "lhs\(index)", type: type).map { field in
                         let suffix = field.name.dropFirst(3)
-                        return "\(field.name) == rhs\(suffix)"
+                        return "guard \(field.name) == rhs\(suffix) else { return false }"
                     }
-                }.joined(separator: " && ")
-                return "case let (.\(enumCase.name)(\(lhs)), .\(enumCase.name)(\(rhs))): return \(comparisons.isEmpty ? "true" : comparisons)"
+                }.joined(separator: "\n")
+                return "case let (.\(enumCase.name)(\(lhs)), .\(enumCase.name)(\(rhs))):\n\(comparisons)\nreturn true"
             } + (analysis.cases.count > 1 ? ["default: return false"] : [])
             return "switch (lhs, rhs) {\n\(arms.joined(separator: "\n"))\n}"
         }

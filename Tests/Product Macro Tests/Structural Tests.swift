@@ -106,3 +106,38 @@ extension Token: Hashable where Payload: Hashable {
 }
 extension LabeledPayload: Equatable, Hashable {}
 extension Phantom: Equatable, Hashable, Sendable where Value: ~Copyable {}
+
+@_Structural
+private enum Compared<Value: ~Copyable>: ~Copyable {
+    case pair(Value, Value)
+}
+
+private final class Comparisons {
+    var visited: [Int] = []
+}
+
+private struct RecordedEquality: Equatable {
+    let coordinate: Int
+    let value: Bool
+    let comparisons: Comparisons
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.comparisons.visited.append(lhs.coordinate)
+        return lhs.value == rhs.value
+    }
+}
+
+@Test(arguments: [false, true])
+private func derivedEqualityPreservesShortCircuitOrder(firstMatches: Bool) {
+    let comparisons = Comparisons()
+    let lhs = Compared.pair(
+        RecordedEquality(coordinate: 0, value: firstMatches, comparisons: comparisons),
+        RecordedEquality(coordinate: 1, value: false, comparisons: comparisons)
+    )
+    let rhs = Compared.pair(
+        RecordedEquality(coordinate: 0, value: true, comparisons: comparisons),
+        RecordedEquality(coordinate: 1, value: true, comparisons: comparisons)
+    )
+    #expect(lhs != rhs)
+    #expect(comparisons.visited == (firstMatches ? [0, 1] : [0]))
+}
