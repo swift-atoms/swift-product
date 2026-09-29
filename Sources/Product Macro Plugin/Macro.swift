@@ -1,5 +1,5 @@
-import SwiftSyntax
-import SwiftSyntaxMacros
+public import SwiftSyntax
+public import SwiftSyntaxMacros
 import Product_Macro_Core
 
 public struct Macro: PeerMacro {
