@@ -2,12 +2,7 @@ public import SwiftSyntax
 import SwiftSyntaxBuilder
 
 extension Structural {
-    // The structural law: a structure has a capability exactly when every component has it. Each capability is
-    // an extension conditional on the stored component types; with no parameters the capability is asserted and the
-    // compiler checks the components. Equality and hashing are spelled out: synthesis inside a conditional
-    // extension of a noncopyable type is not emitted.
     public enum Derivation {
-        // Copyable under the same law, for a generic structure that suppressed it (native conditional Copyable).
         public static func copyable(of analysis: Analysis) -> [ExtensionDeclSyntax] {
             return [DeclSyntax(stringLiteral: "extension \(analysis.type): Swift::Copyable\(analysis.requirements(for: "Swift::Copyable")) {}")]
                 .compactMap { $0.as(ExtensionDeclSyntax.self) }
@@ -19,7 +14,6 @@ extension Structural {
             func requirements(_ capability: String) -> String { analysis.requirements(for: capability) }
             var declarations: [String] = []
             if capability == "Swift::Sendable" { declarations.append("extension \(analysis.type): Swift::Sendable\(requirements("Swift::Sendable")) {}") }
-            // A noncopyable structure compares and hashes only where a conditional conformance restores Copyable: when generic.
             if !analysis.suppressesCopyable || isGeneric {
                 if capability == "Swift::Equatable" {
                 declarations.append("""

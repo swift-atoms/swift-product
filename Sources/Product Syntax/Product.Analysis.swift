@@ -3,8 +3,6 @@ public import Operation_Syntax
 public import SwiftSyntax
 
 extension Product {
-    // A protocol read as a product: its functions (each an Operation.Signature), its getters and its
-    // associated types, with the diagnostics of what a stored product cannot represent.
     public struct Analysis {
         public typealias Function = Operation.Signature
         public typealias Parameter = Operation.Signature.Parameter
@@ -36,7 +34,6 @@ extension Product {
 
         public static func storageName(_ name: String) -> String { "`_" + name.filter { $0 != "`" } + "`" }
 
-        /// Swift storage policy for the mathematical product; shared by its declaration and forwarding owners.
         public func storage(privateFunctions: Bool = false, unlabelled: Set<String> = []) throws -> Type.Syntax.Record {
             try Type.Syntax.Record(algebra) { coordinate in
                 if let function = functionCoordinates.first(where: { $0.storage == coordinate.name }) {

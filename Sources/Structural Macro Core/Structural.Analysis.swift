@@ -2,8 +2,6 @@ import Type_Algebra_Syntax
 public import SwiftSyntax
 
 extension Structural {
-    // The components of a structure: a struct's stored fields or an enum's cases, and the generic parameters the
-    // structure's capabilities are conditional on.
     public struct Analysis {
         public struct Field {
             public let name: String
@@ -33,7 +31,6 @@ extension Structural {
             return tuple.elements.enumerated().flatMap { coordinates(name: "\(name).\($0.offset)", type: $0.element.type) }
         }
 
-        /// Only stored component obligations; phantom parameters introduce no requirements.
         public func requirements(for capability: String) -> String {
             let dependent = componentTypes.flatMap { Self.coordinates(name: "", type: $0) }.map(\.type).filter { spelling in
                 spelling.split(whereSeparator: { !$0.isLetter && !$0.isNumber && $0 != "_" }).contains { parameters.contains(String($0)) }
