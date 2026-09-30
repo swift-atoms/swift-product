@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 import Testing
 
@@ -44,3 +45,4 @@ private struct `Variadic parameter capabilities remain constrained by the compil
         return diagnostic
     }
 }
+#endif
