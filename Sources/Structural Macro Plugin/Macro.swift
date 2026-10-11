@@ -2,7 +2,9 @@ public import SwiftSyntax
 public import SwiftSyntaxMacros
 import Structural_Macro_Core
 
-public struct Macro: ExtensionMacro {
+public struct Macro: ExtensionMacro {}
+
+extension Macro {
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax,
         providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {

@@ -123,10 +123,10 @@ extension `Products preserve component arity through operations and checked conf
 
     @Test
     func `Products conform to Error when their components are errors`() {
-        struct Failure: Swift.Error, Equatable {}
-        struct Conflict: Swift.Error, Equatable {}
+        struct Failure: Swift::Error, Equatable {}
+        struct Conflict: Swift::Error, Equatable {}
         let aggregated = Product(Failure(), Conflict())
-        let asError: any Swift.Error = aggregated
+        let asError: any Swift::Error = aggregated
         _ = asError
     }
 }
@@ -159,7 +159,7 @@ extension `Products preserve component arity through operations and checked conf
 
     @Test
     func `map propagates typed throws`() {
-        struct Boom: Swift.Error, Equatable {}
+        struct Boom: Swift::Error, Equatable {}
         let pair = Product(1, 2)
         do throws(Boom) {
             _ = try pair.map(
@@ -267,7 +267,7 @@ extension `Products preserve component arity through operations and checked conf
 
     @Test
     func `fold propagates typed throws`() {
-        struct Boom: Swift.Error, Equatable {}
+        struct Boom: Swift::Error, Equatable {}
         let pair = Product(1, 2)
 
         do throws(Boom) {
@@ -314,7 +314,7 @@ extension `Products preserve component arity through operations and checked conf
 
     @Test
     func `Products support Equatable when every component does`() {
-        func eq<T: Swift.Equatable>(_ a: borrowing T, _ b: borrowing T) -> Bool {
+        func eq<T: Swift::Equatable>(_ a: borrowing T, _ b: borrowing T) -> Bool {
             a == b
         }
         let a = Product(1, "x")
@@ -326,7 +326,7 @@ extension `Products preserve component arity through operations and checked conf
 
     @Test
     func `Products support Hashable when every component does`() {
-        func hashed<T: Swift.Hashable>(_ x: borrowing T) -> Int {
+        func hashed<T: Swift::Hashable>(_ x: borrowing T) -> Int {
             var hasher = Hasher()
             x.hash(into: &hasher)
             return hasher.finalize()
@@ -338,7 +338,7 @@ extension `Products preserve component arity through operations and checked conf
 
     @Test
     func `Products support Comparable when every component does`() {
-        func less<T: Swift.Comparable>(
+        func less<T: Swift::Comparable>(
             _ a: borrowing T,
             _ b: borrowing T
         ) -> Bool { a < b }

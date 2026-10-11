@@ -1,7 +1,7 @@
 extension Product {
 
     @inlinable
-    public consuming func map<each NewElement, E: Swift.Error>(
+    public consuming func map<each NewElement, E: Swift::Error>(
         _ transforms: repeat (each Element) throws(E) -> each NewElement
     ) throws(E) -> Product<repeat each NewElement> {
         Product<repeat each NewElement>(
@@ -13,7 +13,7 @@ extension Product {
 extension Product {
 
     @inlinable
-    public static func map<each NewElement, E: Swift.Error>(
+    public static func map<each NewElement, E: Swift::Error>(
         _ product: consuming Product,
         _ transforms: repeat (each Element) throws(E) -> each NewElement
     ) throws(E) -> Product<repeat each NewElement> {

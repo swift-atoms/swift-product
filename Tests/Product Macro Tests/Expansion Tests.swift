@@ -5,7 +5,7 @@ import Testing
 @testable import Product_Macro_Plugin
 
 private let productMacros: [String: MacroSpec] = [
-    "Product": MacroSpec(type: Product_Macro_Plugin.Macro.self)
+    "Product": MacroSpec(type: Product_Macro_Plugin::Macro.self)
 ]
 
 private func expectProductExpansion(

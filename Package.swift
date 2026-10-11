@@ -28,11 +28,11 @@ let package = Package(
     ],
     targets: [
         .macro(name: "Structural Macro Plugin", dependencies: [
-            "Structural Macro Core",
+            .target(name: "Structural Macro Core"),
             .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
         ]),
-        .target(name: "Structural Macro", dependencies: ["Structural Macro Plugin"]),
+        .target(name: "Structural Macro", dependencies: [.target(name: "Structural Macro Plugin")]),
         .target(name: "Structural Macro Core", dependencies: [
                 .product(name: "Type Algebra Syntax", package: "swift-algebra"),
             .product(name: "SwiftSyntax", package: "swift-syntax"),
@@ -77,7 +77,7 @@ let package = Package(
             name: "Product Macro Core",
             dependencies: [
                 .product(name: "Type Algebra Syntax", package: "swift-algebra"),
-                "Product Syntax",
+                .target(name: "Product Syntax"),
                 .product(name: "Operation Syntax", package: "swift-operation"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
@@ -86,7 +86,7 @@ let package = Package(
         .macro(
             name: "Product Macro Plugin",
             dependencies: [
-                "Product Macro Core",
+                .target(name: "Product Macro Core"),
                 .product(name: "Type Algebra Syntax", package: "swift-algebra"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
@@ -96,17 +96,17 @@ let package = Package(
         .target(
             name: "Product Macro",
             dependencies: [
-                "Structural Macro",
-                "Product Macro Plugin",
+                .target(name: "Structural Macro"),
+                .target(name: "Product Macro Plugin"),
             ]
         ),
         .testTarget(
             name: "Product Macro Tests",
             dependencies: [
                 .product(name: "Operation Syntax", package: "swift-operation"),
-                "Product Macro",
-                "Product Macro Core",
-                "Product Macro Plugin",
+                .target(name: "Product Macro"),
+                .target(name: "Product Macro Core"),
+                .target(name: "Product Macro Plugin"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
@@ -117,7 +117,7 @@ let package = Package(
     swiftLanguageModes: [.v6]
 )
 
-for target in package.targets where ![.system, .binary, .plugin].contains(target.type) {
+for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
     target.swiftSettings = (target.swiftSettings ?? []) + [
         .strictMemorySafety(),
         .enableUpcomingFeature("ExistentialAny"),

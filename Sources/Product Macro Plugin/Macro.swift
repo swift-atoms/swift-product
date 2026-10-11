@@ -2,7 +2,9 @@ public import SwiftSyntax
 public import SwiftSyntaxMacros
 import Product_Macro_Core
 
-public struct Macro: PeerMacro {
+public struct Macro: PeerMacro {}
+
+extension Macro {
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,

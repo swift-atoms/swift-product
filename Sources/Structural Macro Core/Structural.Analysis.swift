@@ -26,24 +26,6 @@ extension Structural {
 
         public let isEnum: Bool
 
-        public static func coordinates(name: String, type: TypeSyntax) -> [Field] {
-            guard let tuple = type.as(TupleTypeSyntax.self) else { return [Field(name: name, type: type.trimmedDescription)] }
-            return tuple.elements.enumerated().flatMap { coordinates(name: "\(name).\($0.offset)", type: $0.element.type) }
-        }
-
-        public func requirements(for capability: String) -> String {
-            let dependent = componentTypes.flatMap { Self.coordinates(name: "", type: $0) }.map(\.type).filter { spelling in
-                spelling.split(whereSeparator: { !$0.isLetter && !$0.isNumber && $0 != "_" }).contains { parameters.contains(String($0)) }
-            }
-            let unique = Array(Set(dependent)).sorted()
-            var predicates = unique.map { "\($0): \(capability)" }
-            for parameter in noncopyableParameters {
-                let restoringCopyable = unique.contains(parameter) && ["Copyable", "Swift::Copyable", "Swift::Equatable", "Swift::Hashable"].contains(capability)
-                if !restoringCopyable { predicates.append("\(parameter): ~Swift::Copyable") }
-            }
-            return predicates.isEmpty ? "" : " where " + predicates.joined(separator: ", ")
-        }
-
         public init?(_ declaration: some DeclGroupSyntax, type: some TypeSyntaxProtocol) {
             let inheritance: InheritanceClauseSyntax?
             let modifiers: DeclModifierListSyntax
@@ -85,5 +67,25 @@ extension Structural {
             suppressesCopyable = suppressed.contains("Copyable")
             suppressesEscapable = suppressed.contains("Escapable")
         }
+    }
+}
+
+extension Structural.Analysis {
+    public static func coordinates(name: String, type: TypeSyntax) -> [Field] {
+        guard let tuple = type.as(TupleTypeSyntax.self) else { return [Field(name: name, type: type.trimmedDescription)] }
+        return tuple.elements.enumerated().flatMap { coordinates(name: "\(name).\($0.offset)", type: $0.element.type) }
+    }
+
+    public func requirements(for capability: String) -> String {
+        let dependent = componentTypes.flatMap { Self.coordinates(name: "", type: $0) }.map(\.type).filter { spelling in
+            spelling.split(whereSeparator: { !$0.isLetter && !$0.isNumber && $0 != "_" }).contains { parameters.contains(String($0)) }
+        }
+        let unique = Array(Set(dependent)).sorted()
+        var predicates = unique.map { "\($0): \(capability)" }
+        for parameter in noncopyableParameters {
+            let restoringCopyable = unique.contains(parameter) && ["Copyable", "Swift::Copyable", "Swift::Equatable", "Swift::Hashable"].contains(capability)
+            if !restoringCopyable { predicates.append("\(parameter): ~Swift::Copyable") }
+        }
+        return predicates.isEmpty ? "" : " where " + predicates.joined(separator: ", ")
     }
 }

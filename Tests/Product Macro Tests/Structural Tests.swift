@@ -120,7 +120,9 @@ private struct RecordedEquality: Equatable {
     let coordinate: Int
     let value: Bool
     let comparisons: Comparisons
+}
 
+extension RecordedEquality {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.comparisons.visited.append(lhs.coordinate)
         return lhs.value == rhs.value

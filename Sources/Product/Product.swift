@@ -29,4 +29,4 @@ extension Product {
     }
 }
 
-extension Product: Swift.Sendable where repeat each Element: Swift.Sendable {}
+extension Product: Swift::Sendable where repeat each Element: Swift::Sendable {}

@@ -14,7 +14,7 @@ private enum Counter {
         func increment(limit: Int) async throws(Limit) -> Int
     }
 
-    enum Limit: Swift.Error {
+    enum Limit: Swift::Error {
         case exceeded
     }
 }

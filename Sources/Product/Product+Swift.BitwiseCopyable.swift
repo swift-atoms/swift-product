@@ -1,1 +1,1 @@
-extension Product: Swift.BitwiseCopyable where repeat each Element: Swift.BitwiseCopyable {}
+extension Product: Swift::BitwiseCopyable where repeat each Element: Swift::BitwiseCopyable {}

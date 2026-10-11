@@ -1,1 +1,1 @@
-extension Product: Swift.Error where repeat each Element: Swift.Error {}
+extension Product: Swift::Error where repeat each Element: Swift::Error {}

@@ -2,14 +2,18 @@ import Product_Macro_Core
 public import SwiftSyntax
 public import SwiftSyntaxMacros
 
-public struct Memberwise: MemberMacro {
+public struct Memberwise: MemberMacro {}
+
+extension Memberwise {
     public static func expansion(of node: AttributeSyntax, providingMembersOf declaration: some DeclGroupSyntax,
         conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [DeclSyntax] {
         try Product.Value.Derivation.memberwise(declaration)
     }
 }
 
-public struct Draft: MemberMacro {
+public struct Draft: MemberMacro {}
+
+extension Draft {
     public static func expansion(of node: AttributeSyntax, providingMembersOf declaration: some DeclGroupSyntax,
         conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [DeclSyntax] {
         let arguments = node.arguments?.as(LabeledExprListSyntax.self) ?? []
