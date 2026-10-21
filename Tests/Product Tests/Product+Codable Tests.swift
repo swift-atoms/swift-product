@@ -2,7 +2,9 @@ import Foundation
 import Product_Foundation_Integration
 import Testing
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product coding is available when every component supports coding` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Product coding is available when every component supports coding`
+{
     @Test
     func `Nullary products round trip as empty coordinate arrays`() throws {
         let original = Product()

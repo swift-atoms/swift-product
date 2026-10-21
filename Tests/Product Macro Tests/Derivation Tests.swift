@@ -1,5 +1,5 @@
-import Product_Syntax
 import Operation_Syntax
+import Product_Syntax
 import SwiftParser
 import SwiftSyntax
 import Testing
@@ -72,14 +72,18 @@ struct `Product Derivation Tests` {
         #expect(analysis.propertyCoordinates.map(\.name.text) == ["result"])
         #expect(function.name.text == "transform")
         #expect(function.parameters.map(\.localName.text) == ["input", "output"])
-        #expect(function.parameters.map(\.closureType.trimmedDescription) == [
-            "borrowing Input",
-            "consuming Output",
-        ])
-        #expect(function.parameters.map(\.valueType.trimmedDescription) == [
-            "Input",
-            "Output",
-        ])
+        #expect(
+            function.parameters.map(\.closureType.trimmedDescription) == [
+                "borrowing Input",
+                "consuming Output",
+            ]
+        )
+        #expect(
+            function.parameters.map(\.valueType.trimmedDescription) == [
+                "Input",
+                "Output",
+            ]
+        )
         #expect(function.parameters.map(\.transfersOwnership) == [false, true])
         #expect(
             function.closureType.trimmedDescription

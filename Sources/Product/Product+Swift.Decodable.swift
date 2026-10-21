@@ -1,5 +1,5 @@
 #if !hasFeature(Embedded)
-extension Product: Swift::Decodable where repeat each Element: Swift::Decodable {
+    extension Product: Swift::Decodable where repeat each Element: Swift::Decodable {
 
         @inlinable
         public init(from decoder: any Decoder) throws(any Swift::Error) {

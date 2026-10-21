@@ -1,6 +1,6 @@
-public import Type_Algebra_Syntax
 public import Operation_Syntax
 public import SwiftSyntax
+public import Type_Algebra_Syntax
 
 extension Product {
     public struct Analysis {
@@ -27,8 +27,10 @@ extension Product {
 
         public var algebra: Type.Record {
             get throws {
-                try Type.Record(functionCoordinates.map { .init($0.storage, $0.algebra.implementation) }
-                    + propertyCoordinates.map { .init($0.name.text, Type.Syntax.Expression($0.type, parameters: []).algebra) })
+                try Type.Record(
+                    functionCoordinates.map { .init($0.storage, $0.algebra.implementation) }
+                        + propertyCoordinates.map { .init($0.name.text, Type.Syntax.Expression($0.type, parameters: []).algebra) }
+                )
             }
         }
 
@@ -38,9 +40,15 @@ extension Product {
             try Type.Syntax.Record(algebra) { coordinate in
                 if let function = functionCoordinates.first(where: { $0.storage == coordinate.name }) {
                     let type = (Type.Syntax.Conformance.contains("Sendable", in: declaration) ? "@Sendable " : "") + function.closureType.trimmedDescription
-                    return .init(privateFunctions ? Self.storageName(coordinate.name) : coordinate.name, type: type,
-                        label: unlabelled.contains(coordinate.name) ? "_" : coordinate.name, binding: coordinate.name,
-                        argument: "@escaping " + type, mutable: false, access: privateFunctions ? "private " : nil)
+                    return .init(
+                        privateFunctions ? Self.storageName(coordinate.name) : coordinate.name,
+                        type: type,
+                        label: unlabelled.contains(coordinate.name) ? "_" : coordinate.name,
+                        binding: coordinate.name,
+                        argument: "@escaping " + type,
+                        mutable: false,
+                        access: privateFunctions ? "private " : nil
+                    )
                 }
                 guard let property = propertyCoordinates.first(where: { $0.name.text == coordinate.name }) else {
                     throw Type.Failure("missing Swift representation for product coordinate")
@@ -56,21 +64,21 @@ extension Product {
 
         public var functionCoordinates: [Function] {
             coordinates.compactMap { coordinate in
-                guard case let .function(function) = coordinate else { return nil }
+                guard case .function(let function) = coordinate else { return nil }
                 return function
             }
         }
 
         public var associatedTypeCoordinates: [AssociatedType] {
             coordinates.compactMap { coordinate in
-                guard case let .associatedType(associatedType) = coordinate else { return nil }
+                guard case .associatedType(let associatedType) = coordinate else { return nil }
                 return associatedType
             }
         }
 
         public var propertyCoordinates: [Property] {
             coordinates.compactMap { coordinate in
-                guard case let .property(property) = coordinate else { return nil }
+                guard case .property(let property) = coordinate else { return nil }
                 return property
             }
         }
@@ -119,13 +127,16 @@ extension Product {
             }
 
             let overloaded = Set(
-                Dictionary(grouping: coordinates.compactMap { coordinate -> String? in
-                    guard case let .function(function) = coordinate else { return nil }
-                    return function.name.text
-                }, by: { $0 }).filter { $0.value.count > 1 }.keys
+                Dictionary(
+                    grouping: coordinates.compactMap { coordinate -> String? in
+                        guard case .function(let function) = coordinate else { return nil }
+                        return function.name.text
+                    },
+                    by: { $0 }
+                ).filter { $0.value.count > 1 }.keys
             )
             self.coordinates = coordinates.map { coordinate in
-                guard case var .function(function) = coordinate else { return coordinate }
+                guard case .function(var function) = coordinate else { return coordinate }
                 function.storage = overloaded.contains(function.name.text) ? function.mangled : function.name.text
                 return .function(function)
             }
@@ -261,7 +272,7 @@ extension Product {
         private static func isGetterOnly(_ binding: PatternBindingSyntax) -> Bool {
             guard let accessors = binding.accessorBlock?.accessors else { return false }
             switch accessors {
-            case let .accessors(list):
+            case .accessors(let list):
                 guard list.count == 1, let accessor = list.first else { return false }
                 return accessor.accessorSpecifier.tokenKind == .keyword(.get)
                     && accessor.body == nil

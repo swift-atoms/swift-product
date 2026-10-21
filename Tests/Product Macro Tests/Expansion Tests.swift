@@ -55,24 +55,24 @@ extension `Product Derivation Tests` {
                 }
                 """,
                 expandedSource: """
-                enum Greeting {
-                    protocol `Protocol` {
-                        func greet(name: String) -> String
-                    }
-
-                    struct Product: `Protocol` {
-                        private let `_greet`: (String) -> String
-
-                        init(greet: @escaping (String) -> String) {
-                            self.`_greet` = greet
+                    enum Greeting {
+                        protocol `Protocol` {
+                            func greet(name: String) -> String
                         }
 
-                        func greet(name: String) -> String {
-                            return (self.`_greet`)(name)
+                        struct Product: `Protocol` {
+                            private let `_greet`: (String) -> String
+
+                            init(greet: @escaping (String) -> String) {
+                                self.`_greet` = greet
+                            }
+
+                            func greet(name: String) -> String {
+                                return (self.`_greet`)(name)
+                            }
                         }
                     }
-                }
-                """
+                    """
             )
         }
 
@@ -90,26 +90,26 @@ extension `Product Derivation Tests` {
                 }
                 """,
                 expandedSource: """
-                enum Transform {
-                    protocol `Protocol` {
-                        associatedtype Input: ~Copyable
-                        associatedtype Output: ~Copyable
-                        func transform(_ input: borrowing Input, into output: consuming Output)
-                    }
-
-                    struct Product<Input: ~Copyable, Output: ~Copyable>: `Protocol` {
-                        private let `_transform`: (borrowing Input, consuming Output) -> Void
-
-                        init(transform: @escaping (borrowing Input, consuming Output) -> Void) {
-                            self.`_transform` = transform
+                    enum Transform {
+                        protocol `Protocol` {
+                            associatedtype Input: ~Copyable
+                            associatedtype Output: ~Copyable
+                            func transform(_ input: borrowing Input, into output: consuming Output)
                         }
 
-                        func transform(_ input: borrowing Input, into output: consuming Output) {
-                            (self.`_transform`)(input, output)
+                        struct Product<Input: ~Copyable, Output: ~Copyable>: `Protocol` {
+                            private let `_transform`: (borrowing Input, consuming Output) -> Void
+
+                            init(transform: @escaping (borrowing Input, consuming Output) -> Void) {
+                                self.`_transform` = transform
+                            }
+
+                            func transform(_ input: borrowing Input, into output: consuming Output) {
+                                (self.`_transform`)(input, output)
+                            }
                         }
                     }
-                }
-                """
+                    """
             )
         }
 
@@ -126,25 +126,25 @@ extension `Product Derivation Tests` {
                 }
                 """,
                 expandedSource: """
-                enum Mutation {
-                    protocol `Protocol` {
-                        associatedtype Value
-                        func mutate(_ value: inout Value)
-                    }
-
-                    struct Product<Value>: `Protocol` {
-                        private let `_mutate`: (inout Value) -> Void
-
-                        init(mutate: @escaping (inout Value) -> Void) {
-                            self.`_mutate` = mutate
+                    enum Mutation {
+                        protocol `Protocol` {
+                            associatedtype Value
+                            func mutate(_ value: inout Value)
                         }
 
-                        func mutate(_ value: inout Value) {
-                            (self.`_mutate`)(&value)
+                        struct Product<Value>: `Protocol` {
+                            private let `_mutate`: (inout Value) -> Void
+
+                            init(mutate: @escaping (inout Value) -> Void) {
+                                self.`_mutate` = mutate
+                            }
+
+                            func mutate(_ value: inout Value) {
+                                (self.`_mutate`)(&value)
+                            }
                         }
                     }
-                }
-                """
+                    """
             )
         }
 
@@ -161,13 +161,13 @@ extension `Product Derivation Tests` {
                 }
                 """,
                 expandedSource: """
-                enum Greeting {
-                    protocol `Protocol` {
-                        var salutation: String { get }
-                        func greet<Value>(name: Value) -> String
+                    enum Greeting {
+                        protocol `Protocol` {
+                            var salutation: String { get }
+                            func greet<Value>(name: Value) -> String
+                        }
                     }
-                }
-                """,
+                    """,
                 diagnostics: [
                     DiagnosticSpec(
                         message: "@Product cannot represent every requirement: `greet` is generic; stored operation fields cannot be generic.",
@@ -190,12 +190,12 @@ extension `Product Derivation Tests` {
                 }
                 """,
                 expandedSource: """
-                enum Counter {
-                    protocol `Protocol` {
-                        var value: Int { get set }
+                    enum Counter {
+                        protocol `Protocol` {
+                            var value: Int { get set }
+                        }
                     }
-                }
-                """,
+                    """,
                 diagnostics: [
                     DiagnosticSpec(
                         message: "@Product cannot represent every requirement: `var value: Int { get set }` is not a getter-only property requirement.",
@@ -216,10 +216,10 @@ extension `Product Derivation Tests` {
                 }
                 """,
                 expandedSource: """
-                enum Greeting {
-                    struct Model {}
-                }
-                """,
+                    enum Greeting {
+                        struct Model {}
+                    }
+                    """,
                 diagnostics: [
                     DiagnosticSpec(
                         message: "@Product applies to a protocol declaration only.",

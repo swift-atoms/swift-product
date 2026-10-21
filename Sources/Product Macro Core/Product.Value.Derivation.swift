@@ -1,6 +1,6 @@
-import Type_Algebra_Syntax
 public import SwiftSyntax
 import SwiftSyntaxBuilder
+import Type_Algebra_Syntax
 
 extension Product {
     public enum Value {
@@ -26,14 +26,26 @@ extension Product.Value.Derivation {
 
     public static func memberwise(_ declaration: some DeclGroupSyntax) throws -> [DeclSyntax] {
         let (structure, stored) = try fields(of: declaration)
-        let record = try Type.Syntax.Record(stored.map { field in
-            let escaping = field.type.is(FunctionTypeSyntax.self) ? "@escaping " : ""
-            return .init(field.name, type: field.type.trimmedDescription,
-                argument: escaping + field.type.trimmedDescription,
-                initial: field.defaultValue?.trimmedDescription, mutable: field.isMutable)
-        })
-        return [DeclSyntax(stringLiteral: try record.initializer(access: access(structure),
-            parameters: stored.filter { $0.isMutable || $0.defaultValue == nil }.map(\.name)))]
+        let record = try Type.Syntax.Record(
+            stored.map { field in
+                let escaping = field.type.is(FunctionTypeSyntax.self) ? "@escaping " : ""
+                return .init(
+                    field.name,
+                    type: field.type.trimmedDescription,
+                    argument: escaping + field.type.trimmedDescription,
+                    initial: field.defaultValue?.trimmedDescription,
+                    mutable: field.isMutable
+                )
+            }
+        )
+        return [
+            DeclSyntax(
+                stringLiteral: try record.initializer(
+                    access: access(structure),
+                    parameters: stored.filter { $0.isMutable || $0.defaultValue == nil }.map(\.name)
+                )
+            )
+        ]
     }
     public static func draft(_ declaration: some DeclGroupSyntax, excluding excluded: [String]) throws -> [DeclSyntax] {
         let (structure, stored) = try fields(of: declaration)
@@ -53,7 +65,9 @@ extension Product.Value.Derivation {
         let properties = selected.map { field in
             "\(visibility)var \(field.name): \(field.type.trimmedDescription)" + (field.defaultValue.map { " = \($0.trimmedDescription)" } ?? "")
         }
-        let first = stored.firstIndex { !excluded.contains($0.name) }!
+        guard let first = stored.firstIndex(where: { !excluded.contains($0.name) }) else {
+            throw Type.Failure("A writable draft must select at least one field, all mutable.")
+        }
         var parameters: [String] = []
         for (index, field) in stored.enumerated() {
             if index == first { parameters.append("_ draft: Draft") }
@@ -64,20 +78,30 @@ extension Product.Value.Derivation {
         let assignments = stored.filter { $0.isMutable || $0.defaultValue == nil }.map { field in
             "self.\(field.name) = \(excluded.contains(field.name) ? field.name : "draft.\(field.name)")"
         }
-        return [DeclSyntax(stringLiteral: """
-            @Memberwise
-            \(visibility)struct Draft {
-                \(properties.joined(separator: "\n"))
-            }
-            """), DeclSyntax(stringLiteral: """
-            \(visibility)var draft: Draft {
-                get { Draft(\(selected.map { "\($0.name): \($0.name)" }.joined(separator: ", "))) }
-                set { \(selected.map { "\($0.name) = newValue.\($0.name)" }.joined(separator: "\n")) }
-            }
-            """), DeclSyntax(stringLiteral: """
-            \(visibility)init(\(parameters.joined(separator: ", "))) {
-                \(assignments.joined(separator: "\n"))
-            }
-            """)]
+        return [
+            DeclSyntax(
+                stringLiteral: """
+                    @Memberwise
+                    \(visibility)struct Draft {
+                        \(properties.joined(separator: "\n"))
+                    }
+                    """
+            ),
+            DeclSyntax(
+                stringLiteral: """
+                    \(visibility)var draft: Draft {
+                        get { Draft(\(selected.map { "\($0.name): \($0.name)" }.joined(separator: ", "))) }
+                        set { \(selected.map { "\($0.name) = newValue.\($0.name)" }.joined(separator: "\n")) }
+                    }
+                    """
+            ),
+            DeclSyntax(
+                stringLiteral: """
+                    \(visibility)init(\(parameters.joined(separator: ", "))) {
+                        \(assignments.joined(separator: "\n"))
+                    }
+                    """
+            ),
+        ]
     }
 }

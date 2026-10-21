@@ -25,7 +25,9 @@ extension `Products preserve component arity through operations and checked conf
     @Suite struct `Bitwise products preserve tuple layout and inline storage` {}
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product construction preserves components projections and arity` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Product construction preserves components projections and arity`
+{
 
     @Test
     func `nullary product has one empty coordinate family`() {
@@ -78,7 +80,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product conformances compare hash and describe their components` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Product conformances compare hash and describe their components`
+{
 
     @Test
     func `equatable compares all components`() {
@@ -131,7 +135,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product mapping transforms components while preserving arity and errors` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Product mapping transforms components while preserving arity and errors`
+{
 
     @Test
     func `map transforms every component preserving arity`() {
@@ -193,7 +199,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product append and prepend extend the expected side` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Product append and prepend extend the expected side`
+{
 
     @Test
     func `append extends the pack on the right`() {
@@ -222,7 +230,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product zipping pairs corresponding component positions` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Product zipping pairs corresponding component positions`
+{
 
     @Test
     func `zip pairs corresponding components`() {
@@ -249,7 +259,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product folding combines components and preserves typed failures` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Product folding combines components and preserves typed failures`
+{
 
     @Test
     func `fold collapses components via closure`() {
@@ -280,7 +292,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Binary product swapping is an involution` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Binary product swapping is an involution`
+{
 
     @Test
     func `swapped reverses a binary product`() {
@@ -299,7 +313,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Product coding is available when every component supports coding` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Product coding is available when every component supports coding`
+{
 
     @Test
     func `Product is Codable when each element is Codable`() {
@@ -310,7 +326,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Products inherit equatable hashable and comparable capabilities from components` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Products inherit equatable hashable and comparable capabilities from components`
+{
 
     @Test
     func `Products support Equatable when every component does`() {
@@ -349,7 +367,9 @@ extension `Products preserve component arity through operations and checked conf
     }
 }
 
-extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`.`Bitwise products preserve tuple layout and inline storage` {
+extension `Products preserve component arity through operations and checked conformances`.`Product operations preserve positional values arity and capabilities`
+    .`Bitwise products preserve tuple layout and inline storage`
+{
 
     @Test
     func `Product is BitwiseCopyable when each element is BitwiseCopyable`() {

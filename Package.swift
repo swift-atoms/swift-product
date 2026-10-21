@@ -27,22 +27,31 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", "603.0.2"..<"604.0.0"),
     ],
     targets: [
-        .macro(name: "Structural Macro Plugin", dependencies: [
-            .target(name: "Structural Macro Core"),
-            .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-            .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-        ]),
+        .macro(
+            name: "Structural Macro Plugin",
+            dependencies: [
+                .target(name: "Structural Macro Core"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+            ]
+        ),
         .target(name: "Structural Macro", dependencies: [.target(name: "Structural Macro Plugin")]),
-        .target(name: "Structural Macro Core", dependencies: [
+        .target(
+            name: "Structural Macro Core",
+            dependencies: [
                 .product(name: "Type Algebra Syntax", package: "swift-algebra"),
-            .product(name: "SwiftSyntax", package: "swift-syntax"),
-            .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-        ]),
-        .target(name: "Product Syntax", dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+            ]
+        ),
+        .target(
+            name: "Product Syntax",
+            dependencies: [
                 .product(name: "Type Algebra Syntax", package: "swift-algebra"),
-            .product(name: "Operation Syntax", package: "swift-operation"),
-            .product(name: "SwiftSyntax", package: "swift-syntax"),
-        ]),
+                .product(name: "Operation Syntax", package: "swift-operation"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+            ]
+        ),
         .target(
             name: "Product",
             dependencies: [],
@@ -52,14 +61,14 @@ let package = Package(
         .target(
             name: "Product Foundation Integration",
             dependencies: [
-                .target(name: "Product"),
+                .target(name: "Product")
             ],
             path: "Sources/Product Foundation Integration"
         ),
         .target(
             name: "Product Test Support",
             dependencies: [
-                .target(name: "Product"),
+                .target(name: "Product")
             ],
             path: "Tests/Support"
         ),
@@ -118,14 +127,15 @@ let package = Package(
 )
 
 for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
-    target.swiftSettings = (target.swiftSettings ?? []) + [
-        .strictMemorySafety(),
-        .enableUpcomingFeature("ExistentialAny"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
-        .enableUpcomingFeature("MemberImportVisibility"),
-        .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
-        .enableUpcomingFeature("InferIsolatedConformances"),
-        .enableExperimentalFeature("Lifetimes"),
-        .treatAllWarnings(as: .error),
-    ]
+    target.swiftSettings =
+        (target.swiftSettings ?? []) + [
+            .strictMemorySafety(),
+            .enableUpcomingFeature("ExistentialAny"),
+            .enableUpcomingFeature("InternalImportsByDefault"),
+            .enableUpcomingFeature("MemberImportVisibility"),
+            .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+            .enableUpcomingFeature("InferIsolatedConformances"),
+            .enableExperimentalFeature("Lifetimes"),
+            .treatAllWarnings(as: .error),
+        ]
 }

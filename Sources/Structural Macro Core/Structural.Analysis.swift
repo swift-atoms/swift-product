@@ -1,5 +1,5 @@
-import Type_Algebra_Syntax
 public import SwiftSyntax
+import Type_Algebra_Syntax
 
 extension Structural {
     public struct Analysis {
@@ -56,14 +56,16 @@ extension Structural {
                 return nil
             }
             self.type = TypeSyntax(type.trimmed)
-            access = modifiers.first {
-                $0.name.tokenKind == .keyword(.public) || $0.name.tokenKind == .keyword(.package)
-            }.map { "\($0.name.text) " } ?? ""
+            access =
+                modifiers.first {
+                    $0.name.tokenKind == .keyword(.public) || $0.name.tokenKind == .keyword(.package)
+                }.map { "\($0.name.text) " } ?? ""
             parameters = generics?.parameters.map(\.name.text) ?? []
             noncopyableParameters = generics?.parameters.filter { $0.inheritedType?.trimmedDescription.contains("~Copyable") == true }.map(\.name.text) ?? []
-            let suppressed = inheritance?.inheritedTypes.compactMap {
-                $0.type.as(SuppressedTypeSyntax.self)?.type.as(IdentifierTypeSyntax.self)?.name.text
-            } ?? []
+            let suppressed =
+                inheritance?.inheritedTypes.compactMap {
+                    $0.type.as(SuppressedTypeSyntax.self)?.type.as(IdentifierTypeSyntax.self)?.name.text
+                } ?? []
             suppressesCopyable = suppressed.contains("Copyable")
             suppressesEscapable = suppressed.contains("Escapable")
         }

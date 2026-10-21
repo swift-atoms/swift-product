@@ -96,12 +96,16 @@ extension Token: Copyable where Payload: Copyable {}
 extension Token: Sendable where Payload: Sendable & ~Copyable {}
 extension Token: Equatable where Payload: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
-        switch (lhs, rhs) { case let (.token(lhs), .token(rhs)): lhs == rhs }
+        switch (lhs, rhs) {
+        case (.token(let lhs), .token(let rhs)): lhs == rhs
+        }
     }
 }
 extension Token: Hashable where Payload: Hashable {
     func hash(into hasher: inout Hasher) {
-        switch self { case let .token(value): hasher.combine(value) }
+        switch self {
+        case .token(let value): hasher.combine(value)
+        }
     }
 }
 extension LabeledPayload: Equatable, Hashable {}

@@ -1,2 +1,2 @@
-@_exported public import Product
 import Foundation
+@_exported public import Product

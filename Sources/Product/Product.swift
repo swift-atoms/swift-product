@@ -2,9 +2,6 @@
 @frozen
 public struct Product<each Element> {
 
-
-
-
     public var values: (repeat each Element)
 
     @inlinable
