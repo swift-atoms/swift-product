@@ -1,1 +1,3 @@
-public enum Structural {}
+#if ProductMacro || StructuralMacro
+    public enum Structural {}
+#endif

@@ -1,1 +1,3 @@
-@_exported import Product_Syntax
+#if ProductMacro
+    @_exported import Product_Syntax
+#endif

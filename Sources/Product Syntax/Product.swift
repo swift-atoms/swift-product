@@ -1,1 +1,3 @@
-public enum Product {}
+#if ProductMacro || ProductSyntax
+    public enum Product {}
+#endif
