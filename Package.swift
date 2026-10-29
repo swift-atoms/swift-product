@@ -45,8 +45,8 @@ let package = Package(
             name: "Structural Macro Core",
             dependencies: [
                 .product(name: "Type Algebra Syntax", package: "swift-algebra", condition: .when(traits: ["ProductMacro", "StructuralMacro"])),
-                .product(name: "SwiftSyntax", package: "swift-syntax", condition: .when(traits: ["ProductMacro", "StructuralMacro"])),
-                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax", condition: .when(traits: ["ProductMacro", "StructuralMacro"])),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
             ]
         ),
         .target(
@@ -54,7 +54,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Type Algebra Syntax", package: "swift-algebra", condition: .when(traits: ["ProductMacro", "ProductSyntax"])),
                 .product(name: "Operation Syntax", package: "swift-operation", condition: .when(traits: ["ProductMacro", "ProductSyntax"])),
-                .product(name: "SwiftSyntax", package: "swift-syntax", condition: .when(traits: ["ProductMacro", "ProductSyntax"])),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
             ]
         ),
         .target(
@@ -93,8 +93,8 @@ let package = Package(
                 .product(name: "Type Algebra Syntax", package: "swift-algebra", condition: .when(traits: ["ProductMacro"])),
                 .target(name: "Product Syntax"),
                 .product(name: "Operation Syntax", package: "swift-operation", condition: .when(traits: ["ProductMacro"])),
-                .product(name: "SwiftSyntax", package: "swift-syntax", condition: .when(traits: ["ProductMacro"])),
-                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax", condition: .when(traits: ["ProductMacro"])),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
             ]
         ),
         .macro(
