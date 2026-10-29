@@ -1,7 +1,9 @@
-import SwiftCompilerPlugin
-import SwiftSyntaxMacros
+#if ProductMacro
+    import SwiftCompilerPlugin
+    import SwiftSyntaxMacros
 
-@main
-struct Plugin: CompilerPlugin {
-    let providingMacros: [any SwiftSyntaxMacros.Macro.Type] = [Macro.self, Memberwise.self, Draft.self]
-}
+    @main
+    struct Plugin: CompilerPlugin {
+        let providingMacros: [any SwiftSyntaxMacros.Macro.Type] = [Macro.self, Memberwise.self, Draft.self]
+    }
+#endif
