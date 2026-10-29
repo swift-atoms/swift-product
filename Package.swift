@@ -21,15 +21,15 @@ let package = Package(
         .library(name: "Product Test Support", targets: ["Product Test Support"]),
         .library(name: "Product Macro", targets: ["Product Macro"]),
     ],
-    dependencies: [
-        .package(url: "https://github.com/swift-atoms/swift-algebra.git", branch: "main"),
-        .package(url: "https://github.com/swift-atoms/swift-operation.git", branch: "main"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", "604.0.0"..<"605.0.0"),
-    ],
     traits: [
         .trait(name: "ProductMacro", description: "Product Macro and the dependencies only it needs"),
         .trait(name: "ProductSyntax", description: "Product Syntax and the dependencies only it needs"),
         .trait(name: "StructuralMacro", description: "Structural Macro and the dependencies only it needs"),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/swift-atoms/swift-algebra.git", branch: "main"),
+        .package(url: "https://github.com/swift-atoms/swift-operation.git", branch: "main"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", "604.0.0"..<"605.0.0"),
     ],
     targets: [
         .macro(
