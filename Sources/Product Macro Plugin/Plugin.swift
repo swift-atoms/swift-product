@@ -6,4 +6,6 @@
     struct Plugin: CompilerPlugin {
         let providingMacros: [any SwiftSyntaxMacros.Macro.Type] = [Macro.self, Memberwise.self, Draft.self]
     }
+#else
+    @main enum Plugin { static func main() {} }
 #endif
