@@ -1,286 +1,284 @@
-#if ProductMacro || ProductSyntax
-    public import Operation_Syntax
-    public import SwiftSyntax
-    public import Type_Algebra_Syntax
+public import Operation_Syntax
+public import SwiftSyntax
+public import Type_Algebra_Syntax
 
-    extension Product {
-        public struct Analysis {
-            public typealias Function = Operation.Signature
-            public typealias Parameter = Operation.Signature.Parameter
+extension Product {
+    public struct Analysis {
+        public typealias Function = Operation.Signature
+        public typealias Parameter = Operation.Signature.Parameter
 
-            public enum Coordinate {
-                case function(Function)
-                case associatedType(AssociatedType)
-                case property(Property)
+        public enum Coordinate {
+            case function(Function)
+            case associatedType(AssociatedType)
+            case property(Property)
+        }
+
+        public struct AssociatedType {
+            public let declaration: AssociatedTypeDeclSyntax
+            public let name: TokenSyntax
+            public let constraint: TypeSyntax?
+        }
+
+        public struct Property {
+            public let declaration: VariableDeclSyntax
+            public let name: TokenSyntax
+            public let type: TypeSyntax
+        }
+
+        public var algebra: Type.Record {
+            get throws {
+                try Type.Record(
+                    functionCoordinates.map { .init($0.storage, $0.algebra.implementation) }
+                        + propertyCoordinates.map { .init($0.name.text, Type.Syntax.Expression($0.type, parameters: []).algebra) }
+                )
             }
+        }
 
-            public struct AssociatedType {
-                public let declaration: AssociatedTypeDeclSyntax
-                public let name: TokenSyntax
-                public let constraint: TypeSyntax?
+        public static func storageName(_ name: String) -> String { "`_" + name.filter { $0 != "`" } + "`" }
+
+        public func storage(privateFunctions: Bool = false, unlabelled: Set<String> = []) throws -> Type.Syntax.Record {
+            try Type.Syntax.Record(algebra) { coordinate in
+                if let function = functionCoordinates.first(where: { $0.storage == coordinate.name }) {
+                    let type = (Type.Syntax.Conformance.contains("Sendable", in: declaration) ? "@Sendable " : "") + function.closureType.trimmedDescription
+                    return .init(
+                        privateFunctions ? Self.storageName(coordinate.name) : coordinate.name,
+                        type: type,
+                        label: unlabelled.contains(coordinate.name) ? "_" : coordinate.name,
+                        binding: coordinate.name,
+                        argument: "@escaping " + type,
+                        mutable: false,
+                        access: privateFunctions ? "private " : nil
+                    )
+                }
+                guard let property = propertyCoordinates.first(where: { $0.name.text == coordinate.name }) else {
+                    throw Type.Failure("missing Swift representation for product coordinate")
+                }
+                return .init(coordinate.name, type: property.type.trimmedDescription, mutable: true)
             }
+        }
 
-            public struct Property {
-                public let declaration: VariableDeclSyntax
-                public let name: TokenSyntax
-                public let type: TypeSyntax
+        public let declaration: ProtocolDeclSyntax
+        public let access: DeclModifierSyntax?
+        public let coordinates: [Coordinate]
+        public let diagnostics: [String]
+
+        public var functionCoordinates: [Function] {
+            coordinates.compactMap { coordinate in
+                guard case .function(let function) = coordinate else { return nil }
+                return function
             }
+        }
 
-            public var algebra: Type.Record {
-                get throws {
-                    try Type.Record(
-                        functionCoordinates.map { .init($0.storage, $0.algebra.implementation) }
-                            + propertyCoordinates.map { .init($0.name.text, Type.Syntax.Expression($0.type, parameters: []).algebra) }
+        public var associatedTypeCoordinates: [AssociatedType] {
+            coordinates.compactMap { coordinate in
+                guard case .associatedType(let associatedType) = coordinate else { return nil }
+                return associatedType
+            }
+        }
+
+        public var propertyCoordinates: [Property] {
+            coordinates.compactMap { coordinate in
+                guard case .property(let property) = coordinate else { return nil }
+                return property
+            }
+        }
+
+        public init(_ declaration: ProtocolDeclSyntax) {
+            self.declaration = declaration
+            access = Self.access(of: declaration)
+            var coordinates: [Coordinate] = []
+            var diagnostics: [String] = []
+            var names: Set<String> = []
+
+            for member in declaration.memberBlock.members {
+                if let function = member.decl.as(FunctionDeclSyntax.self) {
+                    let coordinate = Function(function)
+                    Self.validate(
+                        function,
+                        fullName: coordinate.fullName,
+                        parameters: coordinate.parameters,
+                        isRethrowing: coordinate.isRethrowing,
+                        names: &names,
+                        reasons: &diagnostics
+                    )
+                    coordinates.append(.function(coordinate))
+                } else if let variable = member.decl.as(VariableDeclSyntax.self) {
+                    if let property = Self.property(
+                        variable,
+                        names: &names,
+                        reasons: &diagnostics
+                    ) {
+                        coordinates.append(.property(property))
+                    }
+                } else if let associated = member.decl.as(AssociatedTypeDeclSyntax.self) {
+                    Self.validate(
+                        associated,
+                        names: &names,
+                        reasons: &diagnostics
+                    )
+                    coordinates.append(
+                        .associatedType(Self.associatedType(associated))
+                    )
+                } else {
+                    diagnostics.append(
+                        "`\(member.decl.trimmedDescription)` is not an operation or getter-only product coordinate"
                     )
                 }
             }
 
-            public static func storageName(_ name: String) -> String { "`_" + name.filter { $0 != "`" } + "`" }
+            let overloaded = Set(
+                Dictionary(
+                    grouping: coordinates.compactMap { coordinate -> String? in
+                        guard case .function(let function) = coordinate else { return nil }
+                        return function.name.text
+                    },
+                    by: { $0 }
+                ).filter { $0.value.count > 1 }.keys
+            )
+            self.coordinates = coordinates.map { coordinate in
+                guard case .function(var function) = coordinate else { return coordinate }
+                function.storage = overloaded.contains(function.name.text) ? function.mangled : function.name.text
+                return .function(function)
+            }
+            self.diagnostics = diagnostics
+        }
 
-            public func storage(privateFunctions: Bool = false, unlabelled: Set<String> = []) throws -> Type.Syntax.Record {
-                try Type.Syntax.Record(algebra) { coordinate in
-                    if let function = functionCoordinates.first(where: { $0.storage == coordinate.name }) {
-                        let type = (Type.Syntax.Conformance.contains("Sendable", in: declaration) ? "@Sendable " : "") + function.closureType.trimmedDescription
-                        return .init(
-                            privateFunctions ? Self.storageName(coordinate.name) : coordinate.name,
-                            type: type,
-                            label: unlabelled.contains(coordinate.name) ? "_" : coordinate.name,
-                            binding: coordinate.name,
-                            argument: "@escaping " + type,
-                            mutable: false,
-                            access: privateFunctions ? "private " : nil
-                        )
-                    }
-                    guard let property = propertyCoordinates.first(where: { $0.name.text == coordinate.name }) else {
-                        throw Type.Failure("missing Swift representation for product coordinate")
-                    }
-                    return .init(coordinate.name, type: property.type.trimmedDescription, mutable: true)
+        private static func access(
+            of declaration: ProtocolDeclSyntax
+        ) -> DeclModifierSyntax? {
+            for modifier in declaration.modifiers {
+                switch modifier.name.tokenKind {
+                case .keyword(.public), .keyword(.package), .keyword(.fileprivate):
+                    return modifier
+                case .keyword(.private):
+                    return DeclModifierSyntax(name: .keyword(.fileprivate))
+                default:
+                    continue
                 }
             }
+            return nil
+        }
 
-            public let declaration: ProtocolDeclSyntax
-            public let access: DeclModifierSyntax?
-            public let coordinates: [Coordinate]
-            public let diagnostics: [String]
+        private static func validate(
+            _ associated: AssociatedTypeDeclSyntax,
+            names: inout Set<String>,
+            reasons: inout [String]
+        ) {
+            let name = associated.name.text
+            if !names.insert(name).inserted {
+                reasons.append("`\(name)` duplicates another product coordinate")
+            }
+            if !associated.attributes.isEmpty || !associated.modifiers.isEmpty {
+                reasons.append("`\(name)` has attributes or modifiers that are not plain product structure")
+            }
+            if associated.initializer != nil || associated.genericWhereClause != nil {
+                reasons.append("`\(name)` has a default or where clause that the product family cannot preserve")
+            }
+            if (associated.inheritanceClause?.inheritedTypes.count ?? 0) > 1 {
+                reasons.append("`\(name)` has multiple constraints that the product family cannot preserve")
+            }
+        }
 
-            public var functionCoordinates: [Function] {
-                coordinates.compactMap { coordinate in
-                    guard case .function(let function) = coordinate else { return nil }
-                    return function
-                }
+        private static func validate(
+            _ function: FunctionDeclSyntax,
+            fullName: String,
+            parameters: [Analysis.Parameter],
+            isRethrowing: Bool,
+            names: inout Set<String>,
+            reasons: inout [String]
+        ) {
+            let name = function.name.trimmedDescription
+            guard case .identifier = function.name.tokenKind else {
+                reasons.append("`\(name)` is an operator requirement")
+                return
+            }
+            if !names.insert(fullName).inserted {
+                reasons.append("`\(fullName)` duplicates another product coordinate")
+            }
+            if !function.attributes.isEmpty {
+                reasons.append("`\(name)` has attributes whose effects cannot be represented by the product field")
+            }
+            if !function.modifiers.isEmpty {
+                reasons.append("`\(name)` has receiver or type modifiers whose effects cannot be represented by the product field")
+            }
+            if function.genericParameterClause != nil || function.genericWhereClause != nil {
+                reasons.append("`\(name)` is generic; stored operation fields cannot be generic")
+            }
+            if isRethrowing {
+                reasons.append("`\(name)` is rethrowing; stored function values cannot express rethrows")
+            }
+            if function.tokens(viewMode: .sourceAccurate).contains(where: {
+                $0.tokenKind == .keyword(.Self)
+            }) {
+                reasons.append("`\(name)` refers to Self, which would change meaning on the generated product")
             }
 
-            public var associatedTypeCoordinates: [AssociatedType] {
-                coordinates.compactMap { coordinate in
-                    guard case .associatedType(let associatedType) = coordinate else { return nil }
-                    return associatedType
+            for parameter in parameters {
+                let declaration = parameter.declaration
+                let local = declaration.secondName ?? declaration.firstName
+                if local.tokenKind == .wildcard {
+                    reasons.append("`\(name)` has an unnamed parameter that cannot be forwarded")
                 }
-            }
-
-            public var propertyCoordinates: [Property] {
-                coordinates.compactMap { coordinate in
-                    guard case .property(let property) = coordinate else { return nil }
-                    return property
+                if !declaration.attributes.isEmpty || !declaration.modifiers.isEmpty {
+                    reasons.append("`\(name)` has a parameter convention whose effects cannot yet be represented")
                 }
-            }
-
-            public init(_ declaration: ProtocolDeclSyntax) {
-                self.declaration = declaration
-                access = Self.access(of: declaration)
-                var coordinates: [Coordinate] = []
-                var diagnostics: [String] = []
-                var names: Set<String> = []
-
-                for member in declaration.memberBlock.members {
-                    if let function = member.decl.as(FunctionDeclSyntax.self) {
-                        let coordinate = Function(function)
-                        Self.validate(
-                            function,
-                            fullName: coordinate.fullName,
-                            parameters: coordinate.parameters,
-                            isRethrowing: coordinate.isRethrowing,
-                            names: &names,
-                            reasons: &diagnostics
-                        )
-                        coordinates.append(.function(coordinate))
-                    } else if let variable = member.decl.as(VariableDeclSyntax.self) {
-                        if let property = Self.property(
-                            variable,
-                            names: &names,
-                            reasons: &diagnostics
-                        ) {
-                            coordinates.append(.property(property))
-                        }
-                    } else if let associated = member.decl.as(AssociatedTypeDeclSyntax.self) {
-                        Self.validate(
-                            associated,
-                            names: &names,
-                            reasons: &diagnostics
-                        )
-                        coordinates.append(
-                            .associatedType(Self.associatedType(associated))
-                        )
-                    } else {
-                        diagnostics.append(
-                            "`\(member.decl.trimmedDescription)` is not an operation or getter-only product coordinate"
-                        )
-                    }
+                if case .unsupported = parameter.convention {
+                    reasons.append("`\(name)` has an unsupported parameter type specifier")
                 }
-
-                let overloaded = Set(
-                    Dictionary(
-                        grouping: coordinates.compactMap { coordinate -> String? in
-                            guard case .function(let function) = coordinate else { return nil }
-                            return function.name.text
-                        },
-                        by: { $0 }
-                    ).filter { $0.value.count > 1 }.keys
-                )
-                self.coordinates = coordinates.map { coordinate in
-                    guard case .function(var function) = coordinate else { return coordinate }
-                    function.storage = overloaded.contains(function.name.text) ? function.mangled : function.name.text
-                    return .function(function)
+                if declaration.ellipsis != nil {
+                    reasons.append("`\(name)` has a variadic parameter; stored function values cannot be variadic")
                 }
-                self.diagnostics = diagnostics
-            }
-
-            private static func access(
-                of declaration: ProtocolDeclSyntax
-            ) -> DeclModifierSyntax? {
-                for modifier in declaration.modifiers {
-                    switch modifier.name.tokenKind {
-                    case .keyword(.public), .keyword(.package), .keyword(.fileprivate):
-                        return modifier
-                    case .keyword(.private):
-                        return DeclModifierSyntax(name: .keyword(.fileprivate))
-                    default:
-                        continue
-                    }
-                }
-                return nil
-            }
-
-            private static func validate(
-                _ associated: AssociatedTypeDeclSyntax,
-                names: inout Set<String>,
-                reasons: inout [String]
-            ) {
-                let name = associated.name.text
-                if !names.insert(name).inserted {
-                    reasons.append("`\(name)` duplicates another product coordinate")
-                }
-                if !associated.attributes.isEmpty || !associated.modifiers.isEmpty {
-                    reasons.append("`\(name)` has attributes or modifiers that are not plain product structure")
-                }
-                if associated.initializer != nil || associated.genericWhereClause != nil {
-                    reasons.append("`\(name)` has a default or where clause that the product family cannot preserve")
-                }
-                if (associated.inheritanceClause?.inheritedTypes.count ?? 0) > 1 {
-                    reasons.append("`\(name)` has multiple constraints that the product family cannot preserve")
-                }
-            }
-
-            private static func validate(
-                _ function: FunctionDeclSyntax,
-                fullName: String,
-                parameters: [Analysis.Parameter],
-                isRethrowing: Bool,
-                names: inout Set<String>,
-                reasons: inout [String]
-            ) {
-                let name = function.name.trimmedDescription
-                guard case .identifier = function.name.tokenKind else {
-                    reasons.append("`\(name)` is an operator requirement")
-                    return
-                }
-                if !names.insert(fullName).inserted {
-                    reasons.append("`\(fullName)` duplicates another product coordinate")
-                }
-                if !function.attributes.isEmpty {
-                    reasons.append("`\(name)` has attributes whose effects cannot be represented by the product field")
-                }
-                if !function.modifiers.isEmpty {
-                    reasons.append("`\(name)` has receiver or type modifiers whose effects cannot be represented by the product field")
-                }
-                if function.genericParameterClause != nil || function.genericWhereClause != nil {
-                    reasons.append("`\(name)` is generic; stored operation fields cannot be generic")
-                }
-                if isRethrowing {
-                    reasons.append("`\(name)` is rethrowing; stored function values cannot express rethrows")
-                }
-                if function.tokens(viewMode: .sourceAccurate).contains(where: {
-                    $0.tokenKind == .keyword(.Self)
-                }) {
-                    reasons.append("`\(name)` refers to Self, which would change meaning on the generated product")
-                }
-
-                for parameter in parameters {
-                    let declaration = parameter.declaration
-                    let local = declaration.secondName ?? declaration.firstName
-                    if local.tokenKind == .wildcard {
-                        reasons.append("`\(name)` has an unnamed parameter that cannot be forwarded")
-                    }
-                    if !declaration.attributes.isEmpty || !declaration.modifiers.isEmpty {
-                        reasons.append("`\(name)` has a parameter convention whose effects cannot yet be represented")
-                    }
-                    if case .unsupported = parameter.convention {
-                        reasons.append("`\(name)` has an unsupported parameter type specifier")
-                    }
-                    if declaration.ellipsis != nil {
-                        reasons.append("`\(name)` has a variadic parameter; stored function values cannot be variadic")
-                    }
-                    if declaration.defaultValue != nil {
-                        reasons.append("`\(name)` has a default argument that would be lost by the product field")
-                    }
-                }
-            }
-
-            private static func property(
-                _ variable: VariableDeclSyntax,
-                names: inout Set<String>,
-                reasons: inout [String]
-            ) -> Analysis.Property? {
-                guard
-                    variable.bindingSpecifier.tokenKind == .keyword(.var),
-                    variable.bindings.count == 1,
-                    let binding = variable.bindings.first,
-                    let name = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier,
-                    let type = binding.typeAnnotation?.type,
-                    isGetterOnly(binding)
-                else {
-                    reasons.append("`\(variable.trimmedDescription)` is not a getter-only property requirement")
-                    return nil
-                }
-                if !variable.attributes.isEmpty || !variable.modifiers.isEmpty {
-                    reasons.append("`\(name.text)` has attributes or modifiers that are not plain product structure")
-                }
-                if !names.insert(name.text).inserted {
-                    reasons.append("`\(name.text)` duplicates another product coordinate")
-                }
-                return Analysis.Property(declaration: variable, name: name, type: type)
-            }
-
-            private static func associatedType(
-                _ declaration: AssociatedTypeDeclSyntax
-            ) -> Analysis.AssociatedType {
-                Analysis.AssociatedType(
-                    declaration: declaration,
-                    name: declaration.name,
-                    constraint: declaration.inheritanceClause?.inheritedTypes.first?.type
-                )
-            }
-
-            private static func isGetterOnly(_ binding: PatternBindingSyntax) -> Bool {
-                guard let accessors = binding.accessorBlock?.accessors else { return false }
-                switch accessors {
-                case .accessors(let list):
-                    guard list.count == 1, let accessor = list.first else { return false }
-                    return accessor.accessorSpecifier.tokenKind == .keyword(.get)
-                        && accessor.body == nil
-                case .getter:
-                    return false
+                if declaration.defaultValue != nil {
+                    reasons.append("`\(name)` has a default argument that would be lost by the product field")
                 }
             }
         }
+
+        private static func property(
+            _ variable: VariableDeclSyntax,
+            names: inout Set<String>,
+            reasons: inout [String]
+        ) -> Analysis.Property? {
+            guard
+                variable.bindingSpecifier.tokenKind == .keyword(.var),
+                variable.bindings.count == 1,
+                let binding = variable.bindings.first,
+                let name = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier,
+                let type = binding.typeAnnotation?.type,
+                isGetterOnly(binding)
+            else {
+                reasons.append("`\(variable.trimmedDescription)` is not a getter-only property requirement")
+                return nil
+            }
+            if !variable.attributes.isEmpty || !variable.modifiers.isEmpty {
+                reasons.append("`\(name.text)` has attributes or modifiers that are not plain product structure")
+            }
+            if !names.insert(name.text).inserted {
+                reasons.append("`\(name.text)` duplicates another product coordinate")
+            }
+            return Analysis.Property(declaration: variable, name: name, type: type)
+        }
+
+        private static func associatedType(
+            _ declaration: AssociatedTypeDeclSyntax
+        ) -> Analysis.AssociatedType {
+            Analysis.AssociatedType(
+                declaration: declaration,
+                name: declaration.name,
+                constraint: declaration.inheritanceClause?.inheritedTypes.first?.type
+            )
+        }
+
+        private static func isGetterOnly(_ binding: PatternBindingSyntax) -> Bool {
+            guard let accessors = binding.accessorBlock?.accessors else { return false }
+            switch accessors {
+            case .accessors(let list):
+                guard list.count == 1, let accessor = list.first else { return false }
+                return accessor.accessorSpecifier.tokenKind == .keyword(.get)
+                    && accessor.body == nil
+            case .getter:
+                return false
+            }
+        }
     }
-#endif
+}

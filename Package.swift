@@ -21,11 +21,6 @@ let package = Package(
         .library(name: "Product Test Support", targets: ["Product Test Support"]),
         .library(name: "Product Macro", targets: ["Product Macro"]),
     ],
-    traits: [
-        .trait(name: "ProductMacro", description: "Product Macro and the dependencies only it needs"),
-        .trait(name: "ProductSyntax", description: "Product Syntax and the dependencies only it needs"),
-        .trait(name: "StructuralMacro", description: "Structural Macro and the dependencies only it needs"),
-    ],
     dependencies: [
         .package(url: "https://github.com/swift-atoms/swift-algebra.git", branch: "main"),
         .package(url: "https://github.com/swift-atoms/swift-operation.git", branch: "main"),
@@ -44,7 +39,7 @@ let package = Package(
         .target(
             name: "Structural Macro Core",
             dependencies: [
-                .product(name: "Type Algebra Syntax", package: "swift-algebra", condition: .when(traits: ["ProductMacro", "StructuralMacro"])),
+                .product(name: "Type Algebra Syntax", package: "swift-algebra"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
             ]
@@ -52,8 +47,8 @@ let package = Package(
         .target(
             name: "Product Syntax",
             dependencies: [
-                .product(name: "Type Algebra Syntax", package: "swift-algebra", condition: .when(traits: ["ProductMacro", "ProductSyntax"])),
-                .product(name: "Operation Syntax", package: "swift-operation", condition: .when(traits: ["ProductMacro", "ProductSyntax"])),
+                .product(name: "Type Algebra Syntax", package: "swift-algebra"),
+                .product(name: "Operation Syntax", package: "swift-operation"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
             ]
         ),
@@ -90,9 +85,9 @@ let package = Package(
         .target(
             name: "Product Macro Core",
             dependencies: [
-                .product(name: "Type Algebra Syntax", package: "swift-algebra", condition: .when(traits: ["ProductMacro"])),
+                .product(name: "Type Algebra Syntax", package: "swift-algebra"),
                 .target(name: "Product Syntax"),
-                .product(name: "Operation Syntax", package: "swift-operation", condition: .when(traits: ["ProductMacro"])),
+                .product(name: "Operation Syntax", package: "swift-operation"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
             ]
@@ -101,7 +96,7 @@ let package = Package(
             name: "Product Macro Plugin",
             dependencies: [
                 .target(name: "Product Macro Core"),
-                .product(name: "Type Algebra Syntax", package: "swift-algebra", condition: .when(traits: ["ProductMacro"])),
+                .product(name: "Type Algebra Syntax", package: "swift-algebra"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
@@ -117,7 +112,7 @@ let package = Package(
         .testTarget(
             name: "Product Macro Tests",
             dependencies: [
-                .product(name: "Operation Syntax", package: "swift-operation", condition: .when(traits: ["ProductMacro"])),
+                .product(name: "Operation Syntax", package: "swift-operation"),
                 .target(name: "Product Macro"),
                 .target(name: "Product Macro Core"),
                 .target(name: "Product Macro Plugin"),

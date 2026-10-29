@@ -1,26 +1,24 @@
-#if ProductMacro
-    import Product_Macro_Core
-    public import SwiftSyntax
-    public import SwiftSyntaxMacros
+import Product_Macro_Core
+public import SwiftSyntax
+public import SwiftSyntaxMacros
 
-    public struct Macro: PeerMacro {}
+public struct Macro: PeerMacro {}
 
-    extension Macro {
-        public static func expansion(
-            of node: AttributeSyntax,
-            providingPeersOf declaration: some DeclSyntaxProtocol,
-            in _: some MacroExpansionContext
-        ) throws -> [DeclSyntax] {
-            guard let declaration = declaration.as(ProtocolDeclSyntax.self) else {
-                throw MacroExpansionErrorMessage("@Product applies to a protocol declaration only.")
-            }
-            let analysis = Product.Analysis(declaration)
-            guard analysis.diagnostics.isEmpty else {
-                throw MacroExpansionErrorMessage(
-                    "@Product cannot represent every requirement: \(analysis.diagnostics.joined(separator: "; "))."
-                )
-            }
-            return Product.Derivation.peers(of: analysis)
+extension Macro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingPeersOf declaration: some DeclSyntaxProtocol,
+        in _: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+        guard let declaration = declaration.as(ProtocolDeclSyntax.self) else {
+            throw MacroExpansionErrorMessage("@Product applies to a protocol declaration only.")
         }
+        let analysis = Product.Analysis(declaration)
+        guard analysis.diagnostics.isEmpty else {
+            throw MacroExpansionErrorMessage(
+                "@Product cannot represent every requirement: \(analysis.diagnostics.joined(separator: "; "))."
+            )
+        }
+        return Product.Derivation.peers(of: analysis)
     }
-#endif
+}
